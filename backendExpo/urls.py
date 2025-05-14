@@ -25,4 +25,5 @@ urlpatterns = [
     path('api/', include('apps.users.urls')),
     path('auth/',include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
+    path('api/', include('apps.psychologists.urls'))
 ]
