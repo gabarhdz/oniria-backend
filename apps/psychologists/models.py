@@ -1,17 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from services.modelServices.generate_id import generate_id
-from django.conf import settings
+from django.contrib.auth import get_user_model
 import random
 import string
 
 # Create your models here.
-
+user = get_user_model()
 class emotion(models.Model):
     name = models.CharField(null=False,max_length=100)
 
 class university(models.Model):
     name = models.CharField(null=False,max_length=100)
+    def __str__(self):
+        return self.name
 
     
 
@@ -20,7 +22,7 @@ class university(models.Model):
 
 class psychologist(models.Model):
     user = models.OneToOneField(
-    settings.AUTH_USER_MODEL,
+    user,
     on_delete=models.CASCADE,
     primary_key=True,
     related_name='psychologist_profile',      # <- aquí defines el nombre único
