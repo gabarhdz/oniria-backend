@@ -11,3 +11,9 @@ class AllPsychologists(APIView):
         Psychologist = psychologist.objects.all()
         serializer = PsychologistSerializer(Psychologist,many=True)
         return Response(serializer.data) 
+
+class SpecificPsychologist(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        psychologist_obj = get_object_or_404(psychologist, user_id=pk)
+        serializer = PsychologistSerializer(psychologist_obj)
+        return Response(serializer.data)
