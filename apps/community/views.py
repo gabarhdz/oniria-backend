@@ -11,4 +11,5 @@ class Communities(APIView):
         """
         communities = Community.objects.all()
         serializer = CommunitySerializer(communities, many=True)
+        print(serializer.data)
         return Response(serializer.data)
