@@ -13,3 +13,12 @@ class Communities(APIView):
         serializer = CommunitySerializer(communities, many=True)
         print(serializer.data)
         return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        """
+        Create a new community.
+        """
+        serializer = CommunitySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
