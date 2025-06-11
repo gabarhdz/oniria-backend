@@ -10,7 +10,7 @@ class Communities(APIView):
         Retrieve all communities.
         """
         communities = Community.objects.all()
-        serializer = CommunitySerializer(communities, many=True)
+        serializer = CommunitySerializer(communities, many=True, context={'request': request})
         print(serializer.data)
         return Response(serializer.data)
     def post(self, request, *args, **kwargs):
@@ -30,7 +30,7 @@ class SimilarCommunities(APIView):
         """
         try:
             similar_communities = Community.objects.filter(name__contains=name)
-            serializer = CommunitySerializer(similar_communities, many=True)
+            serializer = CommunitySerializer(similar_communities, many=True, context={'request': request})
             print("Data is:")
             print(serializer.data)
             return Response(serializer.data,status=200)
