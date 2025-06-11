@@ -28,8 +28,12 @@ class SimilarCommunities(APIView):
         """
         Retrieve similar communities based on a given community ID.
         """
-        similar_communities = Community.objects.filter(name__contains=name)
-        serializer = CommunitySerializer(similar_communities, many=True)
-        print("Data is:")
-        print(serializer.data)
-        return Response(serializer.data,status=200)
+        try:
+            similar_communities = Community.objects.filter(name__contains=name)
+            serializer = CommunitySerializer(similar_communities, many=True)
+            print("Data is:")
+            print(serializer.data)
+            return Response(serializer.data,status=200)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return Response({"error": "An error occurred while retrieving similar communities."}, status=500)
