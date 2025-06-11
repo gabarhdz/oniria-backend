@@ -10,7 +10,7 @@ class Communities(APIView):
         Retrieve all communities.
         """
         communities = Community.objects.all()
-        serializer = CommunitySerializer(communities, many=True)
+        serializer = CommunitySerializer(communities, many=True, context={'request': request})
         print(serializer.data)
         return Response(serializer.data)
     def post(self, request, *args, **kwargs):
@@ -22,3 +22,18 @@ class Communities(APIView):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+    
+class SimilarCommunities(APIView):
+    def get(self,request,name,  *args, **kwargs):
+        """
+        Retrieve similar communities based on a given community ID.
+        """
+        try:
+            similar_communities = Community.objects.filter(name__contains=name)
+            serializer = CommunitySerializer(similar_communities, many=True, context={'request': request})
+            print("Data is:")
+            print(serializer.data)
+            return Response(serializer.data,status=200)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return Response({"error": "An error occurred while retrieving similar communities."}, status=500)
