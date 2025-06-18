@@ -15,7 +15,7 @@ class Communities(APIView):
         print(serializer.data)
         return Response(serializer.data)
     def post(self, request, *args, **kwargs):
-        permission_classes = [IsAuthenticated]
+        
         """
         Create a new community.
         """
