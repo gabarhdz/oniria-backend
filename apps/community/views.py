@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Community
-from .serializers import CommunitySerializer
+from .models import Community, Post
+from .serializers import CommunitySerializer,PostSerializer
 # Create your views here.
 class Communities(APIView):
     def get(self, request, *args, **kwargs):
@@ -34,8 +34,6 @@ class SimilarCommunities(APIView):
         try:
             similar_communities = Community.objects.filter(name__contains=name)
             serializer = CommunitySerializer(similar_communities, many=True, context={'request': request})
-            print("Data is:")
-            print(serializer.data)
             return Response(serializer.data,status=200)
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -58,3 +56,18 @@ class DetailedCommunity(APIView):
             communities_serializer.save()
             return(communities_serializer.data)
         return(communities_serializer.errors)
+    
+
+
+class Posts(APIView):
+    def get(self, request, *args, **kwargs):
+        posts = Post.objects.all()
+        print("Cantidad de posts:", posts.count())  # Debug
+        for post in posts:
+            print(post.title)  # Debug: o cualquier campo
+        serializer = PostSerializer(posts, many=True, context={'request': request})
+        print(serializer.data)  # Debug
+        return Response(serializer.data, status=200)
+    def post(self,request,*args,**kwargs):
+        pass
+
