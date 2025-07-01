@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 from .models import Community, Post
 from .serializers import CommunitySerializer,PostSerializer
 # Create your views here.
@@ -68,6 +69,24 @@ class Posts(APIView):
         serializer = PostSerializer(posts, many=True, context={'request': request})
         print(serializer.data)  # Debug
         return Response(serializer.data, status=200)
-    def post(self,request,*args,**kwargs):
-        pass
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        community_id = request.data["community"]
+        parent_post_id = request.data.get("parent_post")  
 
+        # Convertir el ID a instancias reales
+        community = get_object_or_404(Community, id=community_id)
+        parent_post = None
+        if parent_post_id:
+            parent_post = get_object_or_404(Post, id=parent_post_id)
+
+        # Crear el post a mano
+        Post.objects.create(
+            title=request.data["title"],
+            text=request.data["text"],
+            community=community,
+            author=user,
+            parent_post=parent_post
+        )
+
+        return Response({"message": "Post exitoso"}, status=201)
