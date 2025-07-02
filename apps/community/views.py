@@ -97,7 +97,7 @@ class SpecPost(APIView):
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
             return Response({"error":"Post no encontrado"},status=404)
-        serializer = PostSerializer(post)
+        serializer = PostSerializer(post,context={'request': request})
         return Response(serializer.data)
     
     def delete(self,request,pk,*args,**kwargs):
