@@ -90,3 +90,20 @@ class Posts(APIView):
         )
 
         return Response({"message": "Post exitoso"}, status=201)
+
+class SpecPost(APIView):
+    def get(self,request,pk,*args,**kwargs):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response({"error":"Post no encontrado"},status=404)
+        serializer = PostSerializer(post)
+        return Response(serializer.data)
+    
+    def delete(self,request,pk,*args,**kwargs):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response({"error":"Post no encontrado"},status=404)
+        post.delete()
+        return Response({"message":"Post eliminado exitosamente"})
