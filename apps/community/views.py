@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from .permissions import IsOwnerOrReadOnly
 from .models import Community, Post
 from .serializers import CommunitySerializer,PostSerializer
 # Create your views here.
@@ -92,18 +93,24 @@ class Posts(APIView):
         return Response({"message": "Post exitoso"}, status=201)
 
 class SpecPost(APIView):
-    def get(self,request,pk,*args,**kwargs):
+    permission_classes = [IsOwnerOrReadOnly]
+    
+    def get(self, request, pk, *args, **kwargs):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error":"Post no encontrado"},status=404)
-        serializer = PostSerializer(post,context={'request': request})
+            return Response({"error":"Post no encontrado"}, status=404)
+        
+        self.check_object_permissions(request, post)  # Agregar esta línea
+        serializer = PostSerializer(post, context={'request': request})
         return Response(serializer.data)
     
-    def delete(self,request,pk,*args,**kwargs):
+    def delete(self, request, pk, *args, **kwargs):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error":"Post no encontrado"},status=404)
+            return Response({"error":"Post no encontrado"}, status=404)
+        
+        self.check_object_permissions(request, post)  # ← LÍNEA CLAVE
         post.delete()
         return Response({"message":"Post eliminado exitosamente"})

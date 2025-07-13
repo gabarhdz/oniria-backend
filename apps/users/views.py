@@ -7,6 +7,7 @@ from .serializers import UserSerializer
 
 
 class getAllUsers(APIView):
+    permission_classes = []
     """
     A viewset for viewing and editing user instances.
     """
@@ -21,6 +22,7 @@ class getAllUsers(APIView):
         """
         Create a new user instance.
         """
+        
         serializer = UserSerializer(data=request.data,context={'request': request})
         if serializer.is_valid():
             serializer.save()
