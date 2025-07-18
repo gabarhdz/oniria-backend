@@ -59,6 +59,15 @@ class DetailedCommunity(APIView):
             return(communities_serializer.data)
         return(communities_serializer.errors)
     
+class FilterPostByCommunity(APIView):
+    def get(self, request, community, *args, **kwargs):
+        try:
+            posts = Post.objects.filter(community__id=community)
+            serializer = PostSerializer(posts, many=True,context={'request': request})
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"Error": f"An error just occurred: {e}"}, status=500)
+
 
 
 class Posts(APIView):
