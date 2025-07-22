@@ -206,3 +206,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
+
+INSTALLED_APPS = [
+    # ... otras apps
+    'corsheaders',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # ... otros middlewares
+]
+
+# Para desarrollo - permite requests desde tu frontend
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Puerto de Vite
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
