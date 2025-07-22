@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.psychologists.apps.PsychologistsConfig',
     'apps.dreams.apps.DreamsConfig',
     'apps.community.apps.CommunityConfig',
+    'corsheaders',
 
 ]
 
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backendExpo.urls'
@@ -207,21 +209,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
 
-INSTALLED_APPS = [
-    # ... otras apps
-    'corsheaders',
-]
-
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    # ... otros middlewares
-]
 
 # Para desarrollo - permite requests desde tu frontend
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Puerto de Vite
-    "http://127.0.0.1:3000",
+    "http://localhost:5173",  # Your frontend URL
+    "http://127.0.0.1:5173",  # Alternative localhost
 ]
-
 CORS_ALLOW_CREDENTIALS = True
