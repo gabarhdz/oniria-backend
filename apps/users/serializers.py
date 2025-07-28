@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         # Si el regex NO coincide, lanza ValidationError
         if not re.search(
-            r'^(?=(.*[A-Z]){1,})(?=(.*\d){3,})(?=(.*[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>\/?]){1,}).{12,}$',
+            r'^(?=(.*[A-Z]){1,})(?=(.*\d){1,})(?=(.*[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>\/?]){1,}).{12,}$',
             value
         ):
             raise serializers.ValidationError(
