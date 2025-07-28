@@ -1,6 +1,7 @@
 from django.db import models
 from services.modelServices.generate_id import generate_id
 from services.UploadProfilePic.UploadProfilePic import UploadProfilePic
+from services.compressImages.compressImages import compressImages
 from django.contrib.auth.models import AbstractUser
 # Create your models here.
 import os
@@ -31,6 +32,9 @@ class User(AbstractUser):
             while User.objects.filter(id=new_id).exists():
                 new_id = id_generator()  # Generamos un nuevo ID si ya existe uno igual
             self.id = new_id
+            if self.profile_pic:
+                compressor = compressImages()
+                compressor(self.profile_pic.path)
         super().save(*args, **kwargs)
     
     def __str__(self):

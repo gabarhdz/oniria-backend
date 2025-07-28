@@ -1,6 +1,6 @@
 import os
 from django.utils.deconstruct import deconstructible
-from services.compressImages.compressImages import compressImages
+
 @deconstructible
 class UploadProfilePic:
     def __init__(self, base_dir='accounts'):
