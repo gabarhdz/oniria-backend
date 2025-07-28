@@ -22,7 +22,7 @@ class User(AbstractUser):
     description = models.TextField(blank=True, null=True,max_length=15000)  # Optional description field
     profile_pic = models.ImageField(upload_to=UploadProfilePic(base_dir='accounts'),blank=True,null=True)
     SleepState = models.ForeignKey(SleepState, on_delete=models.SET_NULL,null=True, blank=True)
-
+    email = models.CharField(max_length=60,unique=True,null=False, blank=False)
     is_psychologist = models.BooleanField(default=False,help_text="Marca si el usuario es un psicólogo certificado.")  
     def save(self, *args, **kwargs):
         if not self.id:
