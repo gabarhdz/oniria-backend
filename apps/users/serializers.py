@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
             value
         ):
             raise serializers.ValidationError(
-                "La contraseña debe tener al menos 12 caracteres, 1 mayúscula, 3 números y un carácter especial."
+                "La contraseña debe tener al menos 12 caracteres, 1 mayúscula, 1 número  y un carácter especial."
             )
         return value  # Si pasa la validación, devuelve el valor
 
