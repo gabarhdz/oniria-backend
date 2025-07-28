@@ -25,9 +25,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('apps.users.urls')),
     path('api/psychologists/', include('apps.psychologists.urls')),
-    path('api/communities/',include('apps.community.urls')),
-    path('auth/',include('djoser.urls')),
-    path('auth/', include('djoser.urls.jwt')),    
+    path('api/communities/',include('apps.community.urls')),   
+    path('api/auth/', include('djoser.urls')),          # incluye /users/me/
+    path('api/auth/', include('djoser.urls.jwt')),
 ]
 
 

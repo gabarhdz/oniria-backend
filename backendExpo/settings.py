@@ -84,7 +84,7 @@ TEMPLATES = [
     },
 ]
 
-RREST_FRAMEWORK = {
+REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -92,6 +92,7 @@ RREST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
 
 
 WSGI_APPLICATION = 'backendExpo.wsgi.application'
