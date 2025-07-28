@@ -3,9 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.forms.models import model_to_dict
 from .permissions import IsOwnerOrReadOnly
 from .models import Community, Post
 from .serializers import CommunitySerializer,PostSerializer
+import json
 # Create your views here.
 class Communities(APIView):
     def get(self, request, *args, **kwargs):
@@ -123,3 +125,27 @@ class SpecPost(APIView):
         self.check_object_permissions(request, post)  # ← LÍNEA CLAVE
         post.delete()
         return Response({"message":"Post eliminado exitosamente"})
+
+class GiveLikes(APIView):
+    def patch(self, request, pk, *args, **kwargs):
+        user = request.user
+        post = Post.objects.get(pk=pk)
+        for user_dislike in post.dislikes.all():
+            #Si el id del dislike es igual al de quien lo envia 
+            if user_dislike.id == user.id:
+                post.dislikes.remove(user)
+        post.likes.add(user)
+        post.save()
+        return Response({"message": "has dado like exitosamente"}, status=200)
+
+class GiveDislikes(APIView):
+    def patch(self, request, pk, *args, **kwargs):
+        user = request.user
+        post = Post.objects.get(pk=pk)
+        for user_like in post.likes.all():
+            #Si el id del dislike es igual al de quien lo envia 
+            if user_like.id == user.id:
+                post.likes.remove(user)
+        post.dislikes.add(user)
+        post.save()
+        return Response({"message": "has dado dislike exitosamente"}, status=200)
