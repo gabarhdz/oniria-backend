@@ -1,11 +1,11 @@
 import os
-from django.utils.deconstruct import deconstructible
+import uuid
+from datetime import datetime
 
-@deconstructible
 class UploadProfilePic:
     def __init__(self, base_dir='accounts'):
         self.base_dir = base_dir
-
+    
     def __call__(self, instance, filename):
         ext = filename.split('.')[-1]
         path = os.path.join(
