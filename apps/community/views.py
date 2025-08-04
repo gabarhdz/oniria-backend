@@ -74,7 +74,7 @@ class FilterPostByCommunity(APIView):
 
 class Posts(APIView):
     def get(self, request, *args, **kwargs):
-        posts = Post.objects.all()
+        posts = Post.objects.all().order_by('created_at')
         print("Cantidad de posts:", posts.count())  # Debug
         for post in posts:
             print(post.title)  # Debug: o cualquier campo

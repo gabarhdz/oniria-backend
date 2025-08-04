@@ -26,6 +26,8 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)  # Users who liked the post
     dislikes = models.ManyToManyField(User, related_name='disliked_posts', blank=True)  # Users who disliked the post
+    class Meta:
+        ordering=['created_at']
 
     def __str__(self):
         return self.title
