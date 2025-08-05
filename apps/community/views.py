@@ -149,3 +149,11 @@ class GiveDislikes(APIView):
         post.dislikes.add(user)
         post.save()
         return Response({"message": "has dado dislike exitosamente"}, status=200)
+    
+
+class JoinCommunities(APIView):
+    def patch(self, request, pk, *args, **kwargs):
+        user = request.user
+        community = Community.objects.get(pk=pk)
+        for is_user in community.users:
+            pass
