@@ -155,7 +155,7 @@ class JoinCommunities(APIView):
     def patch(self, request, pk, *args, **kwargs):
         user = request.user
         community = Community.objects.get(pk=pk)
-        for is_user in community.users:
+        for is_user in community.users.all():
             if is_user.id == user.id:
                 return Response({"message":"Ya eres parte de esta comunidad!"})
         community.users.add(user)

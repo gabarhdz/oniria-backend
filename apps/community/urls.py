@@ -10,7 +10,7 @@ urlpatterns = [
     path('post/like/<str:pk>/',GiveLikes.as_view(),name='give-like-to-a-post'),
     path('post/dislike/<str:pk>/',GiveDislikes.as_view(),name='give-dislike-to-a-post'),
     path('', Communities.as_view(), name='communities'),
-    path('join/<str:pk>',JoinCommunities.as_view(),name="join-communites")
+    path('join/<str:pk>/',JoinCommunities.as_view(),name="join-communites")
     
     
 ]
