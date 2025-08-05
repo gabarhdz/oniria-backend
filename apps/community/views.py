@@ -158,3 +158,6 @@ class JoinCommunities(APIView):
         for is_user in community.users:
             if is_user.id == user.id:
                 return Response({"message":"Ya eres parte de esta comunidad!"})
+        community.users.add(user)
+        community.save()
+        return Response({"message":f"Ahora eres parte de la comunidad {community.name}"}, status=200)

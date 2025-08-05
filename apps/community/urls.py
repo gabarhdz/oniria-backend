@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import Communities,SimilarCommunities,DetailedCommunity,Posts,SpecPost,FilterPostByCommunity,GiveLikes, GiveDislikes
+from .views import Communities,SimilarCommunities,DetailedCommunity,Posts,SpecPost,FilterPostByCommunity,GiveLikes, GiveDislikes,JoinCommunities
 
 urlpatterns = [
     path('post/',Posts.as_view(),name = "posts-view"),
@@ -10,6 +10,7 @@ urlpatterns = [
     path('post/like/<str:pk>/',GiveLikes.as_view(),name='give-like-to-a-post'),
     path('post/dislike/<str:pk>/',GiveDislikes.as_view(),name='give-dislike-to-a-post'),
     path('', Communities.as_view(), name='communities'),
+    path('join/<str:pk>',JoinCommunities.as_view(),name="join-communites")
     
     
 ]
