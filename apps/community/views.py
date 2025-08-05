@@ -156,4 +156,5 @@ class JoinCommunities(APIView):
         user = request.user
         community = Community.objects.get(pk=pk)
         for is_user in community.users:
-            pass
+            if is_user.id == user.id:
+                return Response({"message":"Ya eres parte de esta comunidad!"})
