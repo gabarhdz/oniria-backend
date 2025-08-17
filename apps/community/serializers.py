@@ -5,10 +5,12 @@ from apps.users.serializers import UserSerializer
 
 class CommunitySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100, required=True)
-    users = UserSerializer(many=True,read_only=True)
+    users = UserSerializer(many=True, read_only=True)
+    owner = UserSerializer(read_only=True)  # Solo lectura, se asigna automáticamente
+    
     class Meta:
         model = Community
-        fields = [ 'id', 'name', 'description', 'profile_image','created_at','users']
+        fields = ['id', 'name', 'description', 'profile_image', 'created_at', 'users', 'owner']
 
 
 class PostSerializer(serializers.ModelSerializer):

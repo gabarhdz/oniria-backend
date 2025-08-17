@@ -11,6 +11,7 @@ class Community(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     profile_image = models.ImageField(upload_to=UploadProfilePic(base_dir='communities'), blank=True, null=True)
     users = models.ManyToManyField(User, related_name='communities', blank=True)  # Users who are members of the community
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_communities', null=True, blank=True)  # Owner of the community
 
     def __str__(self):
         return f"Comunidad: {self.name}"
@@ -39,5 +40,3 @@ class PostImage(models.Model):
 
     def __str__(self):
         return f"Imagen de {self.post.title}"
-
-
