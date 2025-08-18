@@ -1,7 +1,9 @@
 import os
 import uuid
 from datetime import datetime
+from django.utils.deconstruct import deconstructible
 
+@deconstructible
 class UploadProfilePic:
     def __init__(self, base_dir='accounts'):
         self.base_dir = base_dir
