@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/communities/',include('apps.community.urls')),   
     path('api/auth/', include('djoser.urls')),          # incluye /users/me/
     path('api/auth/', include('djoser.urls.jwt')),
+    path('api/dreams/')
 ]
 
 
