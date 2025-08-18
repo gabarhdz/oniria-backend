@@ -3,6 +3,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 from decouple import config
+from django.utils.deconstruct import deconstructible
 #set dotenv
 
 
