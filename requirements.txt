@@ -19,7 +19,7 @@ cryptography==44.0.3
 dataclasses-json==0.6.7
 defusedxml==0.7.1
 distro==1.9.0
-Django==5.2
+Django==5.2.7
 django-cors-headers==4.7.0
 django-filter==25.1
 django-unfold==0.58.0
