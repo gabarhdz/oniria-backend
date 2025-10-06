@@ -44,9 +44,10 @@ class SpecificPsychologist(APIView):
         return Response(serializer.data)
     
 class AiTraining(APIView):
-    def post(self,request, pdfFile,*args, **kwargs):
+    def post(self,request,*args, **kwargs):
+        data = request.data
         splitter = splitPDF()
-        splitter(pdfFile)
+        splitter(data["pdfFile"])
         return Response({"message":"PDF procesado y datos almacenados correctamente."}, status=200)
 
     
