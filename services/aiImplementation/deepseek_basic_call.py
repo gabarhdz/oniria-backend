@@ -78,44 +78,25 @@ class deepseek_basic_call:
 
             Pregunta:
             {prompt}
+            """
 
-        Instrucciones:
-        - Si el contexto es relevante, úsalo para dar una respuesta completa
-        - Si el contexto no es relevante, responde basándote en tu conocimiento general
-        - Usa un lenguaje sencillo y comprensible
-        - Sé empático y profesional
-        """
-            else:
-                full_prompt = f"""Responde la siguiente pregunta de manera clara, amigable y profesional:
+        # 6. Llamar a DeepSeek
+        system_message = (
+            "Eres un asistente experto en análisis de documentos enfocado en psicología, "
+            "solamente responde preguntas de ese área. "
+            "En caso de recibir una pregunta que no tiene que ver con psicología o sentimientos dirás lo siguiente: "
+            "'Lo que has consultado va más allá de mi enfoque, mantengámonos en la línea de la psicología y emociones'. "
+            "Usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."
+        )
 
-        {prompt}
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": full_prompt},
+            ],
+            stream=False
+        )
 
-        Usa un lenguaje sencillo y comprensible."""
-
-            # Llamar a DeepSeek
-            logger.info("Enviando prompt a DeepSeek...")
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "Eres Noctiria AI, un asistente experto en psicología y análisis de sueños. Usas lenguaje normal y sencillo, eres empático y te esfuerzas en explicar todo de manera clara y entendible. Ayudas a las personas a comprender mejor sus sueños y su salud mental."
-                    },
-                    {
-                        "role": "user", 
-                        "content": full_prompt
-                    },
-                ],
-                stream=False,
-                temperature=0.7,
-                max_tokens=1000
-            )
-
-            logger.info("Respuesta de DeepSeek recibida exitosamente")
-            return response.choices[0].message.content
-
-        except Exception as e:
-            logger.error(f"Error en deepseek_basic_call: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
-            return f"Lo siento, experimenté un error al procesar tu mensaje. Por favor, intenta nuevamente. (Error: {str(e)[:100]})"
+        # 7. Retornar respuesta
+        return response.choices[0].message.content
