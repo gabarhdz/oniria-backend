@@ -43,11 +43,19 @@ class deepseek_basic_call:
             """
 
         # 6. Llamar a DeepSeek
+        system_message = (
+            "Eres un asistente experto en análisis de documentos enfocado en psicología, "
+            "solamente responde preguntas de ese área. "
+            "En caso de recibir una pregunta que no tiene que ver con psicología o sentimientos dirás lo siguiente: "
+            "'Lo que has consultado va más allá de mi enfoque, mantengámonos en la línea de la psicología y emociones'. "
+            "Usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."
+        )
+
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[
-                {"role": "system", "content": "Eres un asistente experto en análisis de documentos enfocado en psicología, usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."},
-                {"role": "user", "content": full_prompt},
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": full_prompt},
             ],
             stream=False
         )
