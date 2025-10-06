@@ -81,22 +81,28 @@ class deepseek_basic_call:
             """
 
         # 6. Llamar a DeepSeek
-        system_message = (
-            "Eres un asistente experto en análisis de documentos enfocado en psicología, "
-            "solamente responde preguntas de ese área. "
-            "En caso de recibir una pregunta que no tiene que ver con psicología o sentimientos dirás lo siguiente: "
-            "'Lo que has consultado va más allá de mi enfoque, mantengámonos en la línea de la psicología y emociones'. "
-            "Usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."
-        )
+            system_message = (
+                "Eres un asistente experto en análisis de documentos enfocado en psicología, "
+                "solamente responde preguntas de ese área. "
+                "En caso de recibir una pregunta que no tiene que ver con psicología o sentimientos dirás lo siguiente: "
+                "'Lo que has consultado va más allá de mi enfoque, mantengámonos en la línea de la psicología y emociones'. "
+                "Usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."
+                "Entiendes las emociones del otro y eres empático."
+                "Si el contexto no es suficiente para responder la pregunta, pregunta mas detalles aclarando que es para poder ayudar mejor."
+            )
 
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": full_prompt},
-            ],
-            stream=False
-        )
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": full_prompt},
+                ],
+                stream=False
+            )
 
-        # 7. Retornar respuesta
-        return response.choices[0].message.content
+            # 7. Retornar respuesta
+            return response.choices[0].message.content
+
+        except Exception as e:
+            logger.error(f"Error en deepseek_basic_call: {str(e)}")
+            return f"Error en deepseek_basic_call: {str(e)}"
