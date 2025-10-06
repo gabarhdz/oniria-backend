@@ -11,9 +11,9 @@ load_dotenv()
 
 @deconstructible
 class splitPDF:
-    def __call__(self):
+    def __call__(self,pdfFile):
         # 1. Load document
-        loader = PyPDFLoader("./pdfs/Psicoanalisis.pdf")
+        loader = PyPDFLoader(pdfFile)
         document = loader.load()
 
         # 2. Break in chunks

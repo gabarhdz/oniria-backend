@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import psychologist,university
 from rest_framework.exceptions import NotFound
 from .serializers import PsychologistSerializer,UniversitySerializer
+from services.splitPDF.splitPDF import splitPDF
 # Create your views here.
 
 class AllPsychologists(APIView):
@@ -41,5 +42,12 @@ class SpecificPsychologist(APIView):
         psychologist_obj = get_object_or_404(psychologist, user_id=pk)
         serializer = PsychologistSerializer(psychologist_obj)
         return Response(serializer.data)
+    
+class AiTraining(APIView):
+    def post(self,request, pdfFile,*args, **kwargs):
+        splitter = splitPDF()
+        splitter(pdfFile)
+        return Response({"message":"PDF procesado y datos almacenados correctamente."}, status=200)
+
     
     
