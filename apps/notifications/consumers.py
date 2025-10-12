@@ -1,3 +1,4 @@
+# apps/notifications/consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -14,12 +15,22 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """
         Conectar el WebSocket y unirse al grupo del usuario
         """
-        # Obtener el usuario de la query string o headers
-        self.user = self.scope.get('user')
-        
-        if self.user and self.user.is_authenticated:
+        try:
+            # Obtener el usuario del scope (viene del middleware)
+            self.user = self.scope.get('user')
+            
+            print(f"🔌 WebSocket connection attempt - User: {self.user}")
+            
+            # Verificar que el usuario esté autenticado
+            if not self.user or not self.user.is_authenticated:
+                print("❌ User not authenticated, closing connection")
+                await self.close(code=4001)
+                return
+            
             self.user_id = str(self.user.id)
             self.room_group_name = f'user_{self.user_id}'
+            
+            print(f"✅ User authenticated: {self.user.username} ({self.user_id})")
             
             # Unirse al grupo del usuario
             await self.channel_layer.group_add(
@@ -27,7 +38,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 self.channel_name
             )
             
+            # Aceptar la conexión
             await self.accept()
+            
+            print(f"✅ WebSocket connected for user: {self.user.username}")
             
             # Enviar notificaciones no leídas al conectar
             unread_notifications = await self.get_unread_notifications()
@@ -36,13 +50,17 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 'notifications': unread_notifications,
                 'count': len(unread_notifications)
             }))
-        else:
-            await self.close()
+            
+        except Exception as e:
+            print(f"❌ Error in connect: {str(e)}")
+            await self.close(code=4000)
     
     async def disconnect(self, close_code):
         """
         Desconectar y salir del grupo
         """
+        print(f"🔌 WebSocket disconnecting - Code: {close_code}")
+        
         if hasattr(self, 'room_group_name'):
             await self.channel_layer.group_discard(
                 self.room_group_name,
@@ -56,6 +74,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
             action = data.get('action')
+            
+            print(f"📩 Received action: {action}")
             
             if action == 'mark_as_read':
                 notification_id = data.get('notification_id')
@@ -81,10 +101,17 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                     'count': count
                 }))
         
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON decode error: {str(e)}")
             await self.send(text_data=json.dumps({
                 'type': 'error',
                 'message': 'Invalid JSON'
+            }))
+        except Exception as e:
+            print(f"❌ Error in receive: {str(e)}")
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': str(e)
             }))
     
     async def notification_message(self, event):

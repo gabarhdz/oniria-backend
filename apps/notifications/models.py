@@ -75,6 +75,7 @@ class Notification(models.Model):
     read_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
+        db_table = 'notifications_notification'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['recipient', '-created_at']),
