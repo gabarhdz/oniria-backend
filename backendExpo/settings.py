@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'daphne',  # Debe estar ANTES de django.contrib.staticfiles
+    'channels',
+    'apps.notifications',
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
@@ -51,6 +54,22 @@ INSTALLED_APPS = [
     'apps.dreams.apps.DreamsConfig',
     'apps.community.apps.CommunityConfig',
 ]
+
+ASGI_APPLICATION = 'backendExpo.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        # Para desarrollo (solo memoria)
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        
+        # Para producción (Redis) - descomentar y configurar
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
+    },
+}
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Debe ser el primero
@@ -229,7 +248,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  
     "http://127.0.0.1:5173",  
+    "ws://localhost:5173",
+    "wss://localhost:5173",
 ]
+
 
 CORS_ALLOW_CREDENTIALS = True
 
