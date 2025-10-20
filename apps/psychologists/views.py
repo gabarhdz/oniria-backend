@@ -3,9 +3,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import psychologist,university
 from rest_framework.exceptions import NotFound
-from .serializers import PsychologistSerializer,UniversitySerializer
+
+from .models import psychologist, university, forms, questions, answer
+from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer
 from services.splitPDF.splitPDF import splitPDF
 # Create your views here.
 
@@ -13,8 +14,9 @@ class AllPsychologists(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         Psychologist = psychologist.objects.all()
-        serializer = PsychologistSerializer(Psychologist,many=True)
+        serializer = PsychologistSerializer(Psychologist, many=True)
         return Response(serializer.data) 
+
     def post(self, request, pk=None, *args, **kwargs):
         data = request.data
         user = request.user
@@ -44,11 +46,71 @@ class SpecificPsychologist(APIView):
         return Response(serializer.data)
     
 class AiTraining(APIView):
-    def post(self,request,*args, **kwargs):
+    def post(self, request, *args, **kwargs):
         data = request.data
         splitter = splitPDF()
         splitter(data["pdfFile"])
-        return Response({"message":"PDF procesado y datos almacenados correctamente."}, status=200)
+        return Response({"message": "PDF procesado y datos almacenados correctamente."}, status=200)
 
+class AllForms(APIView):
+    """
+    Permite listar todos los formularios y crear uno nuevo.
+    """
+    permission_classes = [IsAuthenticated]
     
+    def get(self, request, *args, **kwargs):
+        forms_qs = forms.objects.all()
+        serializer = FormSerializer(forms_qs, many=True)
+        return Response(serializer.data)
     
+    def post(self, request, *args, **kwargs):
+        serializer = FormSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=201)
+
+class FormDetail(APIView):
+    """
+    Permite recuperar los detalles de un formulario específico.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            form_obj = forms.objects.get(id=pk)
+        except forms.DoesNotExist:
+            raise NotFound("Formulario no encontrado.")
+        serializer = FormSerializer(form_obj)
+        return Response(serializer.data)
+
+class AllQuestions(APIView):
+    """
+    Permite listar todas las preguntas y crear una nueva.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        questions_qs = questions.objects.all()
+        serializer = QuestionSerializer(questions_qs, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, *args, **kwargs):
+        serializer = QuestionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=201)
+
+class CreateAnswer(APIView):
+    """
+    Permite enviar una respuesta para una pregunta asociada a un test.
+    Valida que el valor se encuentre en la escala numérica (1-10).
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        serializer = AnswerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=201)
+
+
