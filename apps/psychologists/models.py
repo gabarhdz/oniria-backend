@@ -4,6 +4,7 @@ from services.modelServices.generate_id import generate_id
 from django.contrib.auth import get_user_model
 import random
 import string
+from django.db.models import Sum
 
 # Create your models here.
 user = get_user_model()
@@ -35,3 +36,52 @@ class psychologist(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class questions(models.Model):
+    psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
+    question_text = models.TextField(null=False, max_length=1000)
+
+    def __str__(self):
+        return f"Question by {self.psychologist.user.username}: {self.question_text[:50]}"
+    
+class forms(models.Model):
+    psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
+    title = models.CharField(null=False, max_length=200)
+    description = models.TextField(null=True, blank=True, max_length=5000)
+    questions = models.ManyToManyField(questions, related_name='forms')
+
+    def __str__(self):
+        return f"Form: {self.title} by {self.psychologist.user.username}"
+
+class form_response(models.Model):
+    """
+    Guarda una instancia de respuesta del formulario por usuario.
+    total_score es la suma de todas las respuestas numéricas asociadas.
+    """
+    form = models.ForeignKey(forms, on_delete=models.CASCADE, related_name='responses')
+    user = models.ForeignKey(user, on_delete=models.CASCADE, related_name='form_responses')
+    created_at = models.DateTimeField(auto_now_add=True)
+    total_score = models.IntegerField(null=True, blank=True, help_text="Suma de los valores de las answers")
+
+    def compute_total(self):
+        agg = self.answers.aggregate(total=Sum('value'))
+        total = agg['total'] or 0
+        self.total_score = total
+        self.save(update_fields=['total_score'])
+        return total
+
+    def __str__(self):
+        return f"Response by {self.user.username} for {self.form.title} ({self.created_at.isoformat()})"
+
+class answer(models.Model):
+    response = models.ForeignKey(form_response, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(questions, on_delete=models.CASCADE)
+    value = models.IntegerField()
+    note = models.TextField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('response', 'question')
+
+    def __str__(self):
+        return f"Answer to '{self.question.question_text[:40]}' = {self.value} (by {self.response.user.username})"
