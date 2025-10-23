@@ -41,7 +41,8 @@ class psychologist(models.Model):
 class questions(models.Model):
     psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
     question_text = models.TextField(null=False, max_length=1000)
-
+    min_value = models.IntegerField(null=False, default=0)
+    max_value = models.IntegerField(null=False, default=10)
     def __str__(self):
         return f"Question by {self.psychologist.user.username}: {self.question_text[:50]}"
     
@@ -50,7 +51,6 @@ class forms(models.Model):
     title = models.CharField(null=False, max_length=200)
     description = models.TextField(null=True, blank=True, max_length=5000)
     questions = models.ManyToManyField(questions, related_name='forms')
-
     def __str__(self):
         return f"Form: {self.title} by {self.psychologist.user.username}"
 
