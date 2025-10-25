@@ -1,6 +1,5 @@
 from django.db import models
 import uuid
-from services.modelServices.generate_id import generate_id
 from apps.users.models import User
 from services.UploadProfilePic.UploadProfilePic import UploadProfilePic
 # Create your models here.
