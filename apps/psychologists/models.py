@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from services.modelServices.generate_id import generate_id
 from django.contrib.auth import get_user_model
+import uuid
 import random
 import string
 from django.db.models import Sum
@@ -9,9 +10,11 @@ from django.db.models import Sum
 # Create your models here.
 user = get_user_model()
 class emotion(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     name = models.CharField(null=False,max_length=100)
 
 class university(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     name = models.CharField(null=False,max_length=100)
     def __str__(self):
         return self.name
@@ -39,6 +42,7 @@ class psychologist(models.Model):
 
 
 class questions(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
     question_text = models.TextField(null=False, max_length=1000)
     min_value = models.IntegerField(null=False, default=0)
@@ -47,6 +51,7 @@ class questions(models.Model):
         return f"Question by {self.psychologist.user.username}: {self.question_text[:50]}"
     
 class forms(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     title = models.CharField(null=False, max_length=200)
     description = models.TextField(null=True, blank=True, max_length=5000)
     questions = models.ForeignKey(questions, related_name='forms')
@@ -58,6 +63,7 @@ class form_response(models.Model):
     Guarda una instancia de respuesta del formulario por usuario.
     total_score es la suma de todas las respuestas numéricas asociadas.
     """
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     form = models.ForeignKey(forms, on_delete=models.CASCADE, related_name='responses')
     user = models.ForeignKey(user, on_delete=models.CASCADE, related_name='form_responses')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -74,6 +80,7 @@ class form_response(models.Model):
         return f"Response by {self.user.username} for {self.form.title} ({self.created_at.isoformat()})"
 
 class answer(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     response = models.ForeignKey(form_response, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(questions, on_delete=models.CASCADE)
     value = models.IntegerField()
