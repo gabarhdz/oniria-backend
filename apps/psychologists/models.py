@@ -54,7 +54,7 @@ class forms(models.Model):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     title = models.CharField(null=False, max_length=200)
     description = models.TextField(null=True, blank=True, max_length=5000)
-    questions = models.ForeignKey(questions, related_name='forms')
+    questions = models.ForeignKey(questions, related_name='forms',on_delete=models.DO_NOTHING)
     def __str__(self):
         return f"Form: {self.title} by {self.psychologist.user.username}"
 
