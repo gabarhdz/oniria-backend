@@ -5,38 +5,22 @@ from services.compressImages.compressImages import compressImages
 from django.contrib.auth.models import AbstractUser
 # Create your models here.
 import os
+import uuid
 #from apps.psychologists.models import psychologist
 
 id_generator = generate_id() 
 
 # In apps/users/models.py
-class SleepState(models.Model):
-    problems = models.TextField(max_length=500, blank=False, null=False)
-    startDate = models.DateTimeField(auto_now_add=True)
-    endDate = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        # Fix the string representation to use fields that actually exist
-        return f"Sleep State - {self.startDate}"
 class User(AbstractUser):
-    id = models.CharField(
-        max_length=20, 
-        primary_key=True, 
-        default=id_generator, 
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    
     description = models.TextField(blank=True, null=True, max_length=15000)
     profile_pic = models.ImageField(
         upload_to=UploadProfilePic(base_dir='accounts'),
         blank=True,
         null=True
     )
-    SleepState = models.ForeignKey(
-        SleepState, 
-        on_delete=models.SET_NULL,
-        null=True, 
-        blank=True
-    )
+    
     # CAMBIO IMPORTANTE: usar EmailField en lugar de CharField
     email = models.EmailField(
         max_length=254,  # Estándar RFC 5321
@@ -50,13 +34,7 @@ class User(AbstractUser):
     )
 
     def save(self, *args, **kwargs):
-        # Generar ID único solo si es un nuevo objeto
-        if not self.pk:  # Mejor usar self.pk que self.id
-            new_id = id_generator()
-            # Asegurar que el ID sea único
-            while User.objects.filter(id=new_id).exists():
-                new_id = id_generator()
-            self.id = new_id
+        
         
         # Comprimir imagen si existe
         if self.profile_pic:
