@@ -1,5 +1,5 @@
 from django.db import models
-from services.modelServices.generate_id import generate_id
+import uuid
 from apps.users.models import User
 from apps.community.models import Community, Post
 
@@ -16,13 +16,7 @@ class Notification(models.Model):
         ('system', 'Notificación del Sistema'),
     )
 
-    id = models.CharField(
-        max_length=20, 
-        primary_key=True, 
-        default=generate_id(), 
-        editable=False
-    )
-    
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     # Usuario que recibe la notificación
     recipient = models.ForeignKey(
         User, 
