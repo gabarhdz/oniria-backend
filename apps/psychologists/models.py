@@ -47,10 +47,9 @@ class questions(models.Model):
         return f"Question by {self.psychologist.user.username}: {self.question_text[:50]}"
     
 class forms(models.Model):
-    psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
     title = models.CharField(null=False, max_length=200)
     description = models.TextField(null=True, blank=True, max_length=5000)
-    questions = models.ManyToManyField(questions, related_name='forms')
+    questions = models.ForeignKey(questions, related_name='forms')
     def __str__(self):
         return f"Form: {self.title} by {self.psychologist.user.username}"
 
@@ -78,7 +77,6 @@ class answer(models.Model):
     response = models.ForeignKey(form_response, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(questions, on_delete=models.CASCADE)
     value = models.IntegerField()
-    note = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ('response', 'question')

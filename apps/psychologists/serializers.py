@@ -29,6 +29,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             'id',
             'psychologist',
             'question_text'
+            'min_value',
+            'max_value'
         ]
         
 class FormSerializer(serializers.ModelSerializer):
