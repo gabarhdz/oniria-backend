@@ -1,6 +1,6 @@
 from django.db import models
+import uuid
 from apps.users.models import User
-from services.modelServices.generate_id import generate_id
 from apps.psychologists.models import psychologist
 
 
@@ -21,27 +21,22 @@ class emotions(models.Model):
 
 
 class dream(models.Model):
-    id=models.CharField(max_length=20, primary_key=True, default=generate_id, editable=False)
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField(max_length=5000,blank=False,null=False)
     emotions =models.ManyToManyField(emotions)
-    def save(self, *args, **kwargs):
-        if not self.id:
-            new_id = generate_id()
-        # Ensure the ID is unique
-            while dream.objects.filter(id=new_id).exists():
-                new_id = generate_id()
-            self.id = new_id
-        super().save(*args, **kwargs)
+    
     
 
 
 class analisis(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     psychologist = models.ForeignKey(psychologist,on_delete=models.CASCADE)
     dream = models.ForeignKey(dream,on_delete=models.CASCADE)
     analisis = models.TextField(max_length=450000,blank=False,null=False)
 
 class exercise(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     user = models.ManyToManyField(User)
     name = models.TextField(max_length=80,blank=False, null=False)
     description = models.TextField(max_length=900,blank=False,null=False)

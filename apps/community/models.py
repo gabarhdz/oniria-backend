@@ -1,11 +1,11 @@
 from django.db import models
-from services.modelServices.generate_id import generate_id
+import uuid
 from apps.users.models import User
 from services.UploadProfilePic.UploadProfilePic import UploadProfilePic
 # Create your models here.
 
 class Community(models.Model):
-    id = models.CharField(max_length=20, primary_key=True, default=generate_id(), editable=False)  # Unique identifier for the post
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)  # Unique identifier for the post
     name = models.CharField(max_length=30, unique=True)
     description = models.TextField(max_length=450, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -18,7 +18,7 @@ class Community(models.Model):
     
 
 class Post(models.Model):
-    id = models.CharField(max_length=20, primary_key=True, default=generate_id(), editable=False)  # Unique identifier for the post
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)  # Unique identifier for the post
     title = models.CharField(max_length=50,null=False, blank=False)
     text = models.TextField(max_length=2500, null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
