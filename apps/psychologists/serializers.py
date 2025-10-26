@@ -1,7 +1,7 @@
 # serializers.py generado autom�ticamente
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import psychologist, university, forms, questions, answer
+from .models import psychologist, university, forms, questions as QuestionModel, answer
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class PsychologistSerializer(serializers.ModelSerializer):
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = questions
+        model = QuestionModel
         fields = [
             'id',
             'psychologist',
@@ -33,12 +33,12 @@ class QuestionSerializer(serializers.ModelSerializer):
             'max_value'
         ]
         
+
+
 class FormSerializer(serializers.ModelSerializer):
-    # Al leer se muestra la información completa de cada pregunta
     questions = QuestionSerializer(many=True, read_only=True)
-    # Para creación/actualización se permite enviar una lista de IDs de preguntas
     questions_ids = serializers.PrimaryKeyRelatedField(
-        queryset=questions.objects.all(), many=True, write_only=True, source='questions'
+        queryset=QuestionModel.objects.all(), many=True, write_only=True, source='questions'
     )
     
     class Meta:
