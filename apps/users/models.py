@@ -15,13 +15,11 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
     
     description = models.TextField(blank=True, null=True, max_length=15000)
-    profile_pic = models.ImageField(
-        upload_to=UploadProfilePic(base_dir='accounts'),
-        blank=True,
+    profile_pic = models.TextField(
+        blank=True, 
         null=True
-    )
+    )  
     
-    # CAMBIO IMPORTANTE: usar EmailField en lugar de CharField
     email = models.EmailField(
         max_length=254,  # Estándar RFC 5321
         unique=True,
