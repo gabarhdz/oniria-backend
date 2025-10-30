@@ -1,11 +1,13 @@
 import os
 import uuid
+import base64
 from datetime import datetime
 from django.utils.deconstruct import deconstructible
+from compressImages import compressImages
 
 @deconstructible
-class UploadProfilePic:
-    def __init__(self, base_dir='accounts'):
+class makeTempPath:
+    def __init__(self, base_dir='tmp_uploads'):
         self.base_dir = base_dir
     
     def __call__(self, instance, filename):
@@ -16,4 +18,5 @@ class UploadProfilePic:
             'images',
             'profilepic'
         )
-        return os.path.join(path, f'profilepic_of_{instance.id}.{ext}')
+        
+        return os.path.join(path, f'{instance.id}.{ext}')
