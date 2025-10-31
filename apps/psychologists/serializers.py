@@ -1,7 +1,9 @@
 # serializers.py generado autom�ticamente
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import psychologist, university, forms, questions as QuestionModel, answer
+from .models import psychologist, university, forms, questions as QuestionModel, answer, PsychologistProfile
+from services.imageHandler import ImageHandler
+
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
@@ -84,3 +86,15 @@ class AnswerSerializer(serializers.ModelSerializer):
                 
             )
         return value
+
+class PsychologistProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PsychologistProfile
+        fields = ['user', 'profile_pic_base64']
+
+    def update(self, instance, validated_data):
+        uploaded_file = self.context['request'].FILES.get('profile_pic')
+        if uploaded_file:
+            handler = ImageHandler()
+            instance.profile_pic_base64 = handler.process_image(instance, uploaded_file)
+        return super().update(instance, validated_data)

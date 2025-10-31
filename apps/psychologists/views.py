@@ -113,6 +113,11 @@ class CreateAnswer(APIView):
         serializer.save()
         return Response(serializer.data, status=201)
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import PsychologistProfile
+
 class UploadProfilePic(APIView):
     permission_classes = [IsAuthenticated]
 
