@@ -6,4 +6,4 @@ class compressImages:
         img = Image.open(image_path)
         img = img.convert('RGB')  
         img.save(image_path, format='JPEG', quality=45, optimize=True)
-
+        return image_path
