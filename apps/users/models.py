@@ -1,25 +1,12 @@
 from django.db import models
-from services.modelServices.generate_id import generate_id
-from services.UploadProfilePic.UploadProfilePic import UploadProfilePic
-from services.compressImages.compressImages import compressImages
 from django.contrib.auth.models import AbstractUser
-# Create your models here.
-import os
+from services.imageHandler.imageHandler import ImageHandler  
 import uuid
-#from apps.psychologists.models import psychologist
 
-id_generator = generate_id() 
-
-# In apps/users/models.py
 class User(AbstractUser):
-    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
-    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     description = models.TextField(blank=True, null=True, max_length=15000)
-    profile_pic = models.TextField(
-        blank=True, 
-        null=True
-    )  
-    
+    profile_pic_base64 = models.TextField(blank=True, null=True)  # Campo para guardar la imagen en base64
     email = models.EmailField(
         max_length=254,  # Estándar RFC 5321
         unique=True,
@@ -31,24 +18,13 @@ class User(AbstractUser):
         help_text="Marca si el usuario es un psicólogo certificado."
     )
 
-    def save(self, *args, **kwargs):
-        
-        
-        # Comprimir imagen si existe
-        if self.profile_pic:
-            # Solo comprimir si es un archivo nuevo o modificado
-            try:
-                # Guardar primero para obtener la ruta del archivo
-                super().save(*args, **kwargs)
-                compressor = compressImages()
-                compressor(self.profile_pic.path)
-                # No llamar save() nuevamente para evitar loop infinito
-                return
-            except Exception as e:
-                # Manejar errores de compresión
-                print(f"Error comprimiendo imagen: {e}")
-        
-        super().save(*args, **kwargs)
+    def save_profile_pic(self, uploaded_file):
+        """
+        Procesa y guarda la imagen de perfil en base64.
+        """
+        handler = ImageHandler(base_dir='users')  # Directorio temporal para usuarios
+        self.profile_pic_base64 = handler.process_image(self, uploaded_file)
+        self.save()
 
     def __str__(self):
         return self.username

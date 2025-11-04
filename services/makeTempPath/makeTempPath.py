@@ -3,7 +3,7 @@ import uuid
 import base64
 from datetime import datetime
 from django.utils.deconstruct import deconstructible
-from compressImages import compressImages
+from ..compressImages.compressImages import compressImages
 
 @deconstructible
 class makeTempPath:
