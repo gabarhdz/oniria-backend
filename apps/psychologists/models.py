@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from services.modelServices.generate_id import generate_id
 from django.contrib.auth import get_user_model
-from services.imageHandler import ImageHandler
+from services.imageHandler.imageHandler import ImageHandler
 import uuid
 import random
 import string

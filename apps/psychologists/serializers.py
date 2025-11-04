@@ -2,7 +2,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import psychologist, university, forms, questions as QuestionModel, answer, PsychologistProfile
-from services.imageHandler import ImageHandler
+from services.imageHandler.imageHandler import ImageHandler
 
 User = get_user_model()
 

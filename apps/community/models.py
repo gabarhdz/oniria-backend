@@ -1,7 +1,7 @@
 from django.db import models
 import uuid
 from apps.users.models import User
-from services.imageHandler import ImageHandler  # Importamos el manejador de imágenes
+from services.imageHandler.imageHandler import ImageHandler  # Importamos el manejador de imágenes
 
 # Create your models here.
 
