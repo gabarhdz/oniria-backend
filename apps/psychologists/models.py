@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from services.modelServices.generate_id import generate_id
 from django.contrib.auth import get_user_model
+from services.imageHandler.imageHandler import ImageHandler
 import uuid
 import random
 import string
@@ -90,3 +91,15 @@ class answer(models.Model):
 
     def __str__(self):
         return f"Answer to '{self.question.question_text[:40]}' = {self.value} (by {self.response.user.username})"
+
+class PsychologistProfile(models.Model):
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
+    profile_pic_base64 = models.TextField(blank=True, null=True)  # Campo para guardar la imagen en base64
+
+    def save_profile_pic(self, uploaded_file):
+        """
+        Procesa y guarda la imagen de perfil en base64.
+        """
+        handler = ImageHandler()
+        self.profile_pic_base64 = handler.process_image(self, uploaded_file)
+        self.save()

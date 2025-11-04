@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 
-from .models import psychologist, university, forms, questions, answer
+from .models import psychologist, university, forms, questions, answer, PsychologistProfile
 from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer
 from services.splitPDF.splitPDF import splitPDF
 # Create your views here.
@@ -112,5 +112,31 @@ class CreateAnswer(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=201)
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import PsychologistProfile
+
+class UploadProfilePic(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        """
+        Endpoint para subir y procesar una imagen de perfil.
+        """
+        user = request.user
+        uploaded_file = request.FILES.get('profile_pic')
+
+        if not uploaded_file:
+            return Response({"error": "No se proporcionó ninguna imagen."}, status=400)
+
+        # Obtener o crear el perfil del psicólogo
+        profile, created = PsychologistProfile.objects.get_or_create(user=user)
+
+        # Procesar y guardar la imagen
+        profile.save_profile_pic(uploaded_file)
+
+        return Response({"message": "Imagen de perfil subida y procesada correctamente."}, status=200)
 
 
