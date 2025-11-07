@@ -1,14 +1,12 @@
+# apps/community/views.py
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.forms.models import model_to_dict
 from .permissions import IsOwnerOrReadOnly, IsCommunityOwnerOrReadOnly
 from .models import Community, Post
 from .serializers import CommunitySerializer, PostSerializer
-import json
-# Create your views here.
 
 class Communities(APIView):
     permission_classes = [IsCommunityOwnerOrReadOnly]
@@ -19,12 +17,11 @@ class Communities(APIView):
         """
         communities = Community.objects.all()
         serializer = CommunitySerializer(communities, many=True, context={'request': request})
-        print(serializer.data)
         return Response(serializer.data)
     
     def post(self, request, *args, **kwargs):
         """
-        Create a new community.
+        Create a new community with optional profile image.
         """
         serializer = CommunitySerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -32,9 +29,14 @@ class Communities(APIView):
             community = serializer.save(owner=request.user)
             # Agregar automáticamente al creador como miembro
             community.users.add(request.user)
-            return Response(CommunitySerializer(community, context={'request': request}).data, status=201)
-        return Response(serializer.errors, status=400)    
-    
+            
+            # Devolver la comunidad creada con la imagen procesada
+            return Response(
+                CommunitySerializer(community, context={'request': request}).data, 
+                status=201
+            )
+        return Response(serializer.errors, status=400)
+
 
 class SimilarCommunities(APIView):
     def get(self, request, name, *args, **kwargs):
@@ -48,7 +50,7 @@ class SimilarCommunities(APIView):
         except Exception as e:
             print(f"Error occurred: {e}")
             return Response({"error": "An error occurred while retrieving similar communities."}, status=500)
-        
+
 
 class DetailedCommunity(APIView):
     permission_classes = [IsCommunityOwnerOrReadOnly]
@@ -57,7 +59,6 @@ class DetailedCommunity(APIView):
         try:    
             community = Community.objects.get(pk=pk)
             serializer = CommunitySerializer(community, context={'request': request})
-            print(serializer.data)
             return Response(serializer.data, status=200)
         except Community.DoesNotExist:
             return Response({"error": "Community not found."}, status=404)
@@ -74,7 +75,12 @@ class DetailedCommunity(APIView):
         # Verificar permisos
         self.check_object_permissions(request, community)
         
-        serializer = CommunitySerializer(community, data=request.data, partial=True, context={'request': request})
+        serializer = CommunitySerializer(
+            community, 
+            data=request.data, 
+            partial=True, 
+            context={'request': request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
@@ -106,17 +112,17 @@ class FilterPostByCommunity(APIView):
 class Posts(APIView):
     def get(self, request, *args, **kwargs):
         posts = Post.objects.all().order_by('created_at')
-        print("Cantidad de posts:", posts.count())  # Debug
-        for post in posts:
-            print(post.title)  # Debug: o cualquier campo
         serializer = PostSerializer(posts, many=True, context={'request': request})
-        print(serializer.data)  # Debug
         return Response(serializer.data, status=200)
     
     def post(self, request, *args, **kwargs):
         user = request.user
-        community_id = request.data["community"]
-        parent_post_id = request.data.get("parent_post")  
+        community_id = request.data.get("community")
+        parent_post_id = request.data.get("parent_post")
+
+        # Validar datos requeridos
+        if not community_id:
+            return Response({"error": "Community ID is required"}, status=400)
 
         # Convertir el ID a instancias reales
         community = get_object_or_404(Community, id=community_id)
@@ -124,16 +130,18 @@ class Posts(APIView):
         if parent_post_id:
             parent_post = get_object_or_404(Post, id=parent_post_id)
 
-        # Crear el post a mano
-        Post.objects.create(
-            title=request.data["title"],
-            text=request.data["text"],
+        # Crear el post
+        post = Post.objects.create(
+            title=request.data.get("title"),
+            text=request.data.get("text"),
             community=community,
             author=user,
             parent_post=parent_post
         )
 
-        return Response({"message": "Post exitoso"}, status=201)
+        # Devolver el post creado serializado
+        serializer = PostSerializer(post, context={'request': request})
+        return Response(serializer.data, status=201)
 
 
 class SpecPost(APIView):
@@ -143,9 +151,9 @@ class SpecPost(APIView):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error":"Post no encontrado"}, status=404)
+            return Response({"error": "Post no encontrado"}, status=404)
         
-        self.check_object_permissions(request, post)  # Agregar esta línea
+        self.check_object_permissions(request, post)
         serializer = PostSerializer(post, context={'request': request})
         return Response(serializer.data)
     
@@ -153,7 +161,7 @@ class SpecPost(APIView):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error":"Post no encontrado"}, status=404)
+            return Response({"error": "Post no encontrado"}, status=404)
         
         self.check_object_permissions(request, post)
         
@@ -167,11 +175,11 @@ class SpecPost(APIView):
         try:
             post = Post.objects.get(pk=pk)
         except Post.DoesNotExist:
-            return Response({"error":"Post no encontrado"}, status=404)
+            return Response({"error": "Post no encontrado"}, status=404)
         
-        self.check_object_permissions(request, post)  # ← LÍNEA CLAVE
+        self.check_object_permissions(request, post)
         post.delete()
-        return Response({"message":"Post eliminado exitosamente"}, status=204)
+        return Response({"message": "Post eliminado exitosamente"}, status=204)
 
 
 class GiveLikes(APIView):
@@ -224,7 +232,7 @@ class GiveDislikes(APIView):
         
         post.save()
         return Response({"message": message}, status=200)
-    
+
 
 class JoinCommunities(APIView):
     permission_classes = [IsAuthenticated]

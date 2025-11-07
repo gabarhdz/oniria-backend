@@ -3,74 +3,111 @@ from rest_framework import serializers
 from .models import User
 import re
 
+
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    profile_pic = serializers.SerializerMethodField()
+    password = serializers.CharField(write_only=True, required=False)
+    profile_pic = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    profile_pic_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        fields = ['url', 'id', 'username', 'email','is_psychologist', 'description', 'profile_pic', 'password']
+        fields = [
+            'url', 
+            'id', 
+            'username', 
+            'email',
+            'is_psychologist', 
+            'description', 
+            'profile_pic',  # Para escritura (archivo)
+            'profile_pic_url',  # Para lectura (base64)
+            'password',
+            'date_joined'
+        ]
         extra_kwargs = {
             'url': {'view_name': 'user-detail', 'lookup_field': 'pk'},
         }
 
-    def get_profile_pic(self, obj):
+    def get_profile_pic_url(self, obj):
         """
-        Devuelve la URL completa de la imagen de perfil
+        Devuelve la imagen en base64 con el prefijo data:image
         """
-        if obj.profile_pic:
-            request = self.context.get('request')
-            if request:
-                # Usar request.build_absolute_uri() para construir la URL completa
-                return request.build_absolute_uri(obj.profile_pic.url)
-            else:
-                # Fallback si no hay request en el contexto
-                return obj.profile_pic.url
+        if obj.profile_pic_base64:
+            # Si ya tiene el prefijo data:image, devolverlo tal cual
+            if obj.profile_pic_base64.startswith('data:image'):
+                return obj.profile_pic_base64
+            # Si no, agregar el prefijo (asumiendo JPEG por defecto)
+            return f"data:image/jpeg;base64,{obj.profile_pic_base64}"
         return None
 
     def validate_password(self, value):
-        # Si el regex NO coincide, lanza ValidationError
+        """Validar fortaleza de la contraseña"""
         if not re.search(
             r'^(?=(.*[A-Z]){1,})(?=(.*\d){1,})(?=(.*[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>\/?]){1,}).{12,}$',
             value
         ):
             raise serializers.ValidationError(
-                "La contraseña debe tener al menos 12 caracteres, 1 mayúscula, 1 número  y un carácter especial."
+                "La contraseña debe tener al menos 12 caracteres, 1 mayúscula, 1 número y un carácter especial."
             )
-        return value  # Si pasa la validación, devuelve el valor
+        return value
 
     def create(self, validated_data):
-        # Extraer profile_pic si está presente (ya que ahora es SerializerMethodField en read)
-        profile_pic = self.initial_data.get('profile_pic')
+        """
+        Crear usuario con imagen en base64
+        """
+        # Extraer campos especiales
+        password = validated_data.pop('password', None)
+        profile_pic_file = validated_data.pop('profile_pic', None)
         
-        user = User.objects.create_user(
+        # Crear usuario
+        user = User.objects.create(
             username=validated_data['username'],
             email=validated_data['email'],
             description=validated_data.get('description', ''),
+            is_psychologist=validated_data.get('is_psychologist', False)
         )
         
-        # Asignar profile_pic si se proporcionó
-        if profile_pic:
-            user.profile_pic = profile_pic
-            
-        user.set_password(validated_data['password'])  # La validación ya ocurrió en validate_password
+        # Establecer contraseña
+        if password:
+            user.set_password(password)
+        
+        # Procesar imagen si existe
+        if profile_pic_file:
+            try:
+                user.save_profile_pic(profile_pic_file)
+            except Exception as e:
+                # Si falla el procesamiento de imagen, eliminar usuario creado
+                user.delete()
+                raise serializers.ValidationError({
+                    'profile_pic': f'Error al procesar la imagen: {str(e)}'
+                })
+        
         user.save()
         return user
 
     def update(self, instance, validated_data):
         """
-        Actualizar una instancia de usuario existente
+        Actualizar usuario con imagen en base64
         """
-        # Extraer la contraseña si está presente
+        # Extraer campos especiales
         password = validated_data.pop('password', None)
+        profile_pic_file = validated_data.pop('profile_pic', None)
         
-        # Actualizar los campos restantes
+        # Actualizar campos normales
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         
-        # Actualizar la contraseña si se proporcionó
+        # Actualizar contraseña si se proporcionó
         if password:
             instance.set_password(password)
+        
+        # Procesar imagen si se proporcionó
+        if profile_pic_file:
+            try:
+                instance.save_profile_pic(profile_pic_file)
+            except Exception as e:
+                raise serializers.ValidationError({
+                    'profile_pic': f'Error al procesar la imagen: {str(e)}'
+                })
         
         instance.save()
         return instance
