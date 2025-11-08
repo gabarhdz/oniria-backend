@@ -6,10 +6,34 @@ from services.imageHandler.imageHandler import ImageHandler
 
 User = get_user_model()
 
+# ...existing code...
 class UserSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','profile_pic']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_pic']
+
+    def get_profile_pic(self, obj):
+        # Intentar obtener profile_pic directamente en el modelo User
+        pic = getattr(obj, 'profile_pic', None)
+        if pic:
+            try:
+                return pic.url
+            except Exception:
+                return pic
+        # Intentar posibles relaciones habituales (profile, psychologistprofile, userprofile)
+        for rel in ('profile', 'psychologistprofile', 'userprofile'):
+            related = getattr(obj, rel, None)
+            if related:
+                pic = getattr(related, 'profile_pic', None)
+                if pic:
+                    try:
+                        return pic.url
+                    except Exception:
+                        return pic
+        return None
+# ...existing code...
 
 class UniversitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,7 +54,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'psychologist',
-            'question_text'
+            'question_text',  # Faltaba una coma aquí
             'min_value',
             'max_value'
         ]
@@ -87,14 +111,22 @@ class AnswerSerializer(serializers.ModelSerializer):
             )
         return value
 
-class PsychologistProfileSerializer(serializers.ModelSerializer):
+class PsychologistSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    university = UniversitySerializer(read_only=True)
+    university_name = serializers.CharField(write_only=True, required=False)
+    
     class Meta:
-        model = PsychologistProfile
-        fields = ['user', 'profile_pic_base64']
-
-    def update(self, instance, validated_data):
-        uploaded_file = self.context['request'].FILES.get('profile_pic')
-        if uploaded_file:
-            handler = ImageHandler()
-            instance.profile_pic_base64 = handler.process_image(instance, uploaded_file)
-        return super().update(instance, validated_data)
+        model = psychologist
+        fields = ['user', 'university', 'university_name', 'description', 'startDate']
+    
+    def create(self, validated_data):
+        university_name = validated_data.pop('university_name', None)
+        
+        if university_name:
+            university_instance, _ = university.objects.get_or_create(
+                name=university_name
+            )
+            validated_data['university'] = university_instance
+        
+        return super().create(validated_data)

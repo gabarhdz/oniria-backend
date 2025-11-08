@@ -12,32 +12,64 @@ from services.splitPDF.splitPDF import splitPDF
 
 class AllPsychologists(APIView):
     permission_classes = [IsAuthenticated]
+    
     def get(self, request, *args, **kwargs):
         Psychologist = psychologist.objects.all()
         serializer = PsychologistSerializer(Psychologist, many=True)
         return Response(serializer.data) 
 
-    def post(self, request, pk=None, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         data = request.data
         user = request.user
 
         try:
-            university_instance = university.objects.get(id=data['university'])
-        except university.DoesNotExist:
-            raise NotFound("Universidad no encontrada.")
+            # Verificar que el usuario sea psicólogo
+            if not user.is_psychologist:
+                return Response(
+                    {"error": "El usuario debe estar marcado como psicólogo"}, 
+                    status=400
+                )
+            
+            # Verificar que no exista ya un perfil de psicólogo
+            if hasattr(user, 'psychologist_profile'):
+                return Response(
+                    {"error": "El usuario ya tiene un perfil de psicólogo"}, 
+                    status=400
+                )
 
-        Psychologist = psychologist.objects.create(
-            user=user,
-            university=university_instance,
-            description=data['description']
-        )
+            # Obtener o crear la universidad por nombre
+            university_name = data.get('university', '')
+            if not university_name:
+                return Response(
+                    {"error": "La universidad es requerida"}, 
+                    status=400
+                )
 
-        return Response({
-            'user_id': Psychologist.user.id,
-            'university': university_instance.name,
-            'description': Psychologist.description
-        }, status=201)
-    
+            # Crear o obtener la universidad
+            university_instance, created = university.objects.get_or_create(
+                name=university_name
+            )
+            
+            if created:
+                print(f"✅ Universidad creada: {university_name}")
+
+            # Crear perfil de psicólogo
+            psychologist_instance = psychologist.objects.create(
+                user=user,
+                university=university_instance,
+                description=data.get('description', '')
+            )
+
+            serializer = PsychologistSerializer(psychologist_instance)
+            return Response(serializer.data, status=201)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {"error": f"Error al crear perfil de psicólogo: {str(e)}"}, 
+                status=500
+            )
 
 class SpecificPsychologist(APIView):
     def get(self, request, pk=None, *args, **kwargs):
