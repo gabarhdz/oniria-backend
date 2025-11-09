@@ -1,7 +1,7 @@
 # serializers.py generado autom�ticamente
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import psychologist, university, forms, questions as QuestionModel, answer, PsychologistProfile
+from .models import psychologist, university, forms, questions, answer, PsychologistProfile
 from services.imageHandler.imageHandler import ImageHandler
 
 User = get_user_model()
@@ -9,7 +9,8 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','profile_pic']
+        # usar el campo base64 que existe en el modelo
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_pic_base64']
 
 class UniversitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,21 +27,20 @@ class PsychologistSerializer(serializers.ModelSerializer):
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = QuestionModel
+        model = questions
         fields = [
             'id',
             'psychologist',
-            'question_text'
+            'question_text',
             'min_value',
             'max_value'
         ]
-        
-
 
 class FormSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, read_only=True)
+    questions_serializer = QuestionSerializer(many=True, read_only=True)
+    # referenciar al queryset del modelo questions, no al serializer
     questions_ids = serializers.PrimaryKeyRelatedField(
-        queryset=QuestionModel.objects.all(), many=True, write_only=True, source='questions'
+        queryset=questions.objects.all(), many=True, write_only=True, source='questions'
     )
     
     class Meta:
@@ -83,7 +83,7 @@ class AnswerSerializer(serializers.ModelSerializer):
     def validate_value(self, value):
         if not 1 <= value <= 10:
             raise serializers.ValidationError(
-                
+                "El valor debe estar entre 1 y 10 en la escala numérica."
             )
         return value
 
@@ -95,6 +95,6 @@ class PsychologistProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         uploaded_file = self.context['request'].FILES.get('profile_pic')
         if uploaded_file:
-            handler = ImageHandler()
+            handler = ImageHandler(base_dir='psychologists')
             instance.profile_pic_base64 = handler.process_image(instance, uploaded_file)
         return super().update(instance, validated_data)

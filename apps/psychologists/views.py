@@ -64,6 +64,7 @@ class AllForms(APIView):
         return Response(serializer.data)
     
     def post(self, request, *args, **kwargs):
+        psychologist = request.user
         serializer = FormSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -95,7 +96,9 @@ class AllQuestions(APIView):
         return Response(serializer.data)
     
     def post(self, request, *args, **kwargs):
-        serializer = QuestionSerializer(data=request.data)
+        data = request.data.copy()
+        data['psychologist'] = request.user.id
+        serializer = QuestionSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=201)

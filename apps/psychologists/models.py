@@ -33,7 +33,7 @@ class psychologist(models.Model):
 
 class questions(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
+    psychologist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     question_text = models.TextField(null=False, max_length=1000)
     min_value = models.IntegerField(null=False, default=0)
     max_value = models.IntegerField(null=False, default=10)
