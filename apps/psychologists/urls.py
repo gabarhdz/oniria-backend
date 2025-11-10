@@ -6,9 +6,14 @@ from .views import (
     AllForms,
     FormDetail,
     AllQuestions,
-    CreateAnswer
+    CreateAnswer,
+    current_psychologist_profile,
 )
 
+
+
+
+  
 urlpatterns = [
     path('psychologists/', AllPsychologists.as_view(), name='all_psychologists'),
     path('psychologists/<int:pk>/', SpecificPsychologist.as_view(), name='specific_psychologist'),
@@ -17,4 +22,6 @@ urlpatterns = [
     path('forms/<int:pk>/', FormDetail.as_view(), name='form_detail'),
     path('questions/', AllQuestions.as_view(), name='all_questions'),
     path('answers/', CreateAnswer.as_view(), name='create_answer'),
+    path('me/', current_psychologist_profile, name='current_psychologist'),
+
 ]
