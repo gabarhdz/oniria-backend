@@ -39,17 +39,17 @@ class questions(models.Model):
     max_value = models.IntegerField(null=False, default=10)
 
     def __str__(self):
-        return f"Question by {self.psychologist.user.username}: {self.question_text[:50]}"
+        return f"Question  {self.question_text[:50]}"
 
 class forms(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     psychologist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(null=False, max_length=200)
     description = models.TextField(null=True, blank=True, max_length=5000)
-    questions = models.ForeignKey(questions, related_name='forms', on_delete=models.DO_NOTHING)
+    questions = models.ManyToManyField(questions, related_name='forms')  # Cambiado a ManyToManyField
 
     def __str__(self):
-        return f"Form: {self.title} by {self.psychologist.user.username}"
+        return f"Form: {self.title} by {self.psychologist.username}"
 
 class form_response(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
