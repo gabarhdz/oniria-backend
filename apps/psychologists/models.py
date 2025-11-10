@@ -110,12 +110,14 @@ class DueTests(models.Model):
         related_name='due_tests_patients',
         on_delete=models.CASCADE
     )
-    form_response = models.OneToOneField(
+    form_response = models.ForeignKey(
         form_response,
         on_delete=models.CASCADE,
         related_name='due_test'
+        ,null=True
+        ,blank=True
     )
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(null=False)
     description = models.TextField(null=True, blank=True, max_length=5000)
     is_completed = models.BooleanField(default=False)
 
