@@ -4,10 +4,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
+from rest_framework.decorators import api_view, permission_classes
+
+
 
 from .models import psychologist, university, forms, questions, answer, PsychologistProfile
 from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer
 from services.splitPDF.splitPDF import splitPDF
+
 # Create your views here.
 
 class AllPsychologists(APIView):
@@ -70,6 +74,35 @@ class AllPsychologists(APIView):
                 {"error": f"Error al crear perfil de psicólogo: {str(e)}"}, 
                 status=500
             )
+
+@api_view(['GET', 'PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def current_psychologist_profile(request):
+    """
+    Obtener o actualizar el perfil del psicólogo actual
+    """
+    try:
+        psychologist_profile = psychologist.objects.get(user=request.user)
+    except psychologist.DoesNotExist:
+        return Response(
+            {'error': 'No tienes un perfil de psicólogo'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if request.method == 'GET':
+        serializer = PsychologistSerializer(psychologist_profile)
+        return Response(serializer.data)
+    
+    elif request.method in ['PUT', 'PATCH']:
+        serializer = PsychologistSerializer(
+            psychologist_profile, 
+            data=request.data, 
+            partial=(request.method == 'PATCH')
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SpecificPsychologist(APIView):
     def get(self, request, pk=None, *args, **kwargs):
