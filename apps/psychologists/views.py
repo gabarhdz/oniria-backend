@@ -124,6 +124,36 @@ class AllQuestions(APIView):
         serializer.save()
         return Response(serializer.data, status=201)
 
+class QuestionDetail(APIView):
+    permission_classes = [IsFormQuestionOwnerOrReadOnly]
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            question_obj = questions.objects.get(id=pk)
+        except questions.DoesNotExist:
+            raise NotFound("Pregunta no encontrada.")
+        serializer = QuestionSerializer(question_obj)
+        return Response(serializer.data)
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            question_obj = questions.objects.get(id=pk)
+        except questions.DoesNotExist:
+            raise NotFound("Pregunta no encontrada.")
+        self.check_object_permissions(request,question_obj)
+        question_obj.delete()
+        return Response({"message": "Pregunta eliminada exitosamente."}, status=204)
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            question_obj = questions.objects.get(id=pk)
+        except questions.DoesNotExist:
+            raise NotFound("Pregunta no encontrada.")
+        self.check_object_permissions(request,question_obj)
+        data = request.data.copy()
+        data['psychologist'] = request.user.id 
+        serializer = QuestionSerializer(question_obj, data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=200)
+
 class CreateAnswer(APIView):
     """
     Permite enviar una respuesta para una pregunta asociada a un test.
