@@ -64,8 +64,10 @@ class AllForms(APIView):
         return Response(serializer.data)
     
     def post(self, request, *args, **kwargs):
-        psychologist = request.user
-        serializer = FormSerializer(data=request.data)
+        data = request.data.copy()
+        data['psychologist'] = request.user.id 
+        
+        serializer = FormSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=201)
@@ -83,6 +85,13 @@ class FormDetail(APIView):
             raise NotFound("Formulario no encontrado.")
         serializer = FormSerializer(form_obj)
         return Response(serializer.data)
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            form_obj = forms.objects.get(id=pk)
+        except forms.DoesNotExist:
+            raise NotFound("Formulario no encontrado.")
+        form_obj.delete()
+        return Response({"message": "Formulario eliminado exitosamente."}, status=204)
 
 class AllQuestions(APIView):
     """
