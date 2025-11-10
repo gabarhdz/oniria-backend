@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
-
+from .permissions import IsFormQuestionOwnerOrReadOnly, IsOwnerOrReadOnly
 from .models import psychologist, university, forms, questions, answer, PsychologistProfile
 from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer
 from services.splitPDF.splitPDF import splitPDF
@@ -73,11 +73,10 @@ class AllForms(APIView):
         return Response(serializer.data, status=201)
 
 class FormDetail(APIView):
+    permission_classes = [IsFormQuestionOwnerOrReadOnly]
     """
     Permite recuperar los detalles de un formulario específico.
     """
-    permission_classes = [IsAuthenticated]
-    
     def get(self, request, pk, *args, **kwargs):
         try:
             form_obj = forms.objects.get(id=pk)
@@ -90,8 +89,21 @@ class FormDetail(APIView):
             form_obj = forms.objects.get(id=pk)
         except forms.DoesNotExist:
             raise NotFound("Formulario no encontrado.")
+        self.check_object_permissions(request,form_obj)
         form_obj.delete()
         return Response({"message": "Formulario eliminado exitosamente."}, status=204)
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            form_obj = forms.objects.get(id=pk)
+        except forms.DoesNotExist:
+            raise NotFound("Formulario no encontrado.")
+        self.check_object_permissions(request,form_obj)
+        data = request.data.copy()
+        data['psychologist'] = request.user.id 
+        serializer = FormSerializer(form_obj, data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=200)
 
 class AllQuestions(APIView):
     """
