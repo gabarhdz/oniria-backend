@@ -59,6 +59,9 @@ class form_response(models.Model):
     total_score = models.IntegerField(null=True, blank=True, help_text="Suma de los valores de las answers")
 
     def compute_total(self):
+        """
+        Calcula y actualiza el puntaje total basado en las respuestas asociadas.
+        """
         agg = self.answers.aggregate(total=Sum('value'))
         total = agg['total'] or 0
         self.total_score = total
@@ -94,3 +97,27 @@ class PsychologistProfile(models.Model):
         handler = ImageHandler()
         self.profile_pic_base64 = handler.process_image(self, uploaded_file)
         self.save()
+
+
+class DueTests(models.Model):
+    psychologist = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='due_tests_psychologists',
+        on_delete=models.CASCADE
+    )
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='due_tests_patients',
+        on_delete=models.CASCADE
+    )
+    form_response = models.OneToOneField(
+        form_response,
+        on_delete=models.CASCADE,
+        related_name='due_test'
+    )
+    date = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(null=True, blank=True, max_length=5000)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"DueTest for {self.patient.username} by {self.psychologist.username} on {self.date.isoformat()}"
