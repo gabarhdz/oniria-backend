@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/auth/', include('djoser.urls.jwt')),
     path('api/dreams/', include('apps.dreams.urls')),
     path('api/chat/', ChatAPIView.as_view(), name='chat-api'),
+    path('api/chat/', include('apps.chat.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
 ]
 

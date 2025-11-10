@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'daphne',  # Debe estar ANTES de django.contrib.staticfiles
     'channels',
     'apps.notifications',
+    'apps.chat',
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
