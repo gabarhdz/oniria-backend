@@ -6,7 +6,8 @@ from .views import (
     AllForms,
     FormDetail,
     AllQuestions,
-    CreateAnswer
+    CreateAnswer,
+    AllFormResponse
 )
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
     path('forms/<str:pk>/', FormDetail.as_view(), name='form_detail'),
     path('questions/', AllQuestions.as_view(), name='all_questions'),
     path('answers/', CreateAnswer.as_view(), name='create_answer'),
+    path('form-response/',AllFormResponse.as_view(),name="response-form")
 ]

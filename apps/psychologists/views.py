@@ -196,21 +196,51 @@ class UploadProfilePic(APIView):
 
 class AllFormResponse(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self,request,*args,**kwargs):
+    def get(self, request, *args, **kwargs):
+        """
+        Listar todas las respuestas al formulario.
+        Usar many=True al serializar queryset para evitar AttributeError.
+        """
         responses = form_response.objects.all()
-        serializer = FormResponseSerializer(responses)
-        return Response(serializer.data,status=200)
-    def post(self,request,*args,**kwargs):
+        serializer = FormResponseSerializer(responses, many=True, context={'request': request})
+        return Response(serializer.data, status=200)
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Crear una respuesta de formulario. Espera:
+        {
+          "form": "<form_uuid>",
+          "answers": [{"question": "<q_uuid>", "value": 5}, ...]  # opcional
+        }
+        """
         data = request.data
         user = request.user
-        form = data.get("form")
-        created_at = data.get("created_at")
+        form_id = data.get("form")
 
-        form_response_obj = form_response.objects.create(
-            user = user,
-            created_at = created_at,
-            form = form
-        )
-        context={'request': request}
-        serializer = FormResponseSerializer(form_response_obj,context={'request': request})
-        return Response({"message":"Respuesta al form hecha correctamente: \n"+serializer.data})
+        # validar form
+        try:
+            form_obj = forms.objects.get(id=form_id)
+        except forms.DoesNotExist:
+            raise NotFound("Formulario no encontrado.")
+
+        # crear form_response
+        fr = form_response.objects.create(user=user, form=form_obj)
+
+        # crear answers si vienen en la petición
+        answers_payload = data.get("answers", [])
+        for a in answers_payload:
+            qid = a.get("question")
+            value = a.get("value")
+            if qid is None or value is None:
+                continue
+            try:
+                q = questions.objects.get(id=qid)
+            except questions.DoesNotExist:
+                continue
+            answer.objects.create(response=fr, question=q, value=value)
+
+        # calcular y almacenar total
+        fr.compute_total()
+
+        serializer = FormResponseSerializer(fr, context={'request': request})
+        return Response(serializer.data, status=201)
