@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from .permissions import IsFormQuestionOwnerOrReadOnly, IsOwnerOrReadOnly
-from .models import psychologist, university, forms, questions, answer, PsychologistProfile
+from .models import psychologist, university, forms, questions, answer, PsychologistProfile, form_response, DueTests    
 from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer
 from services.splitPDF.splitPDF import splitPDF
 # Create your views here.
@@ -194,3 +194,8 @@ class UploadProfilePic(APIView):
         return Response({"message": "Imagen de perfil subida y procesada correctamente."}, status=200)
 
 
+class AllFormResponse(APIView):
+    def get(self,request,*args,**kwargs):
+        responses = form_response.objects.all()
+        
+        return Response({"message":"Test response from psychologists app"},status=200)

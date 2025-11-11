@@ -85,7 +85,7 @@ class answer(models.Model):
 
 class PsychologistProfile(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,  # Usamos settings.AUTH_USER_MODEL en lugar de 'auth.User'
+        settings.AUTH_USER_MODEL,  
         on_delete=models.CASCADE
     )
     profile_pic_base64 = models.TextField(blank=True, null=True)  # Campo para guardar la imagen en base64

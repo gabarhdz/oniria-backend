@@ -1,5 +1,6 @@
 # serializers.py generado automáticamente
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 from .models import (
     psychologist as PsychologistModel,
@@ -7,7 +8,9 @@ from .models import (
     forms as FormModel,
     questions as QuestionModel,
     answer as AnswerModel,
-    PsychologistProfile as PsychologistProfileModel
+    PsychologistProfile as PsychologistProfileModel,
+    form_response as FormResponseModel,
+    DueTests as DueTestsModel
 )
 from services.imageHandler.imageHandler import ImageHandler
 
@@ -121,3 +124,30 @@ class PsychologistProfileSerializer(serializers.ModelSerializer):
             handler = ImageHandler(base_dir='psychologists')
             instance.profile_pic_base64 = handler.process_image(instance, uploaded_file)
         return super().update(instance, validated_data)
+    
+class FormResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormResponseModel
+        fields = ['id', 
+                'form',
+                'user',
+                'created_at',
+                'total_score']
+    
+
+
+class DueTestsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DueTestsModel
+        fields = ['id',
+                  'psychologist',
+                  'patient',
+                  'form_response',
+                  'date',
+                  'description',
+                  'is_completed']
+    def validate_date(self, value):
+        if value < timezone.now():
+            raise serializers.ValidationError("Fecha incorrecta, debe ser una fecha futura.")
+        return value
+
