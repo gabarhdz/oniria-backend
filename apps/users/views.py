@@ -193,3 +193,14 @@ class AllPsychologists(APIView):
         psychologists = User.objects.filter(is_psychologist=True)
         serializer = UserSerializer(psychologists, many=True, context={'request': request})
         return Response(serializer.data)
+    
+class SpecificPsychologist(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk, *args, **kwargs):
+        """
+        Retrieve a psychologist user instance.
+        """
+        psychologist = get_object_or_404(User, pk=pk, is_psychologist=True)
+        serializer = UserSerializer(psychologist, context={'request': request})
+        return Response(serializer.data)
