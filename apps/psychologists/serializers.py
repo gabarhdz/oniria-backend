@@ -19,6 +19,8 @@ User = get_user_model()
 
 # Serializador para el modelo de usuario
 class UserSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_pic_base64']
@@ -59,7 +61,7 @@ class FormSerializer(serializers.ModelSerializer):
     questions_ids = serializers.PrimaryKeyRelatedField(
         queryset=QuestionModel.objects.all(), many=True, write_only=True, source='questions', pk_field=serializers.UUIDField(format='hex')
     )
-    
+
     class Meta:
         model = FormModel
         fields = [
@@ -70,7 +72,7 @@ class FormSerializer(serializers.ModelSerializer):
             'questions',  # Preguntas asociadas (lectura)
             'questions_ids'  # UUIDs de preguntas asociadas (escritura)
         ]
-    
+
     def create(self, validated_data):
         """
         Crear un formulario con preguntas asociadas.
@@ -81,7 +83,7 @@ class FormSerializer(serializers.ModelSerializer):
         # Asociar las preguntas al formulario
         form_obj.questions.set(questions_data)
         return form_obj
-    
+
     def update(self, instance, validated_data):
         """
         Actualizar un formulario y sus preguntas asociadas.
@@ -105,7 +107,7 @@ class AnswerSerializer(serializers.ModelSerializer):
             'value',
             'note'
         ]
-    
+
     def validate_value(self, value):
         if not 1 <= value <= 10:
             raise serializers.ValidationError(

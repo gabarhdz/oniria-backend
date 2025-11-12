@@ -11,6 +11,10 @@ from .views import (
     AssignDueTests
 )
 
+
+
+
+  
 urlpatterns = [
     path('psychologists/', AllPsychologists.as_view(), name='all_psychologists'),
     path('psychologists/<int:pk>/', SpecificPsychologist.as_view(), name='specific_psychologist'),
