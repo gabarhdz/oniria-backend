@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status
 from .permissions import IsFormQuestionOwnerOrReadOnly, IsOwnerOrReadOnly
 from .models import psychologist, university, forms, questions, answer, PsychologistProfile, form_response, DueTests    
 from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer, FormResponseSerializer, DueTestsSerializer
@@ -73,7 +75,6 @@ class AllPsychologists(APIView):
                 {"error": f"Error al crear perfil de psicólogo: {str(e)}"}, 
                 status=500
             )
-
 @api_view(['GET', 'PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def current_psychologist_profile(request):
@@ -104,15 +105,17 @@ def current_psychologist_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SpecificPsychologist(APIView):
-    def get(self, request, pk=None, *args, **kwargs):
+    def get(self, _request, pk=None):
         psychologist_obj = get_object_or_404(psychologist, user_id=pk)
         serializer = PsychologistSerializer(psychologist_obj)
         return Response(serializer.data)
     
 class AiTraining(APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         data = request.data
         splitter = splitPDF()
+        splitter(data["pdfFile"])
+        return Response({"message": "PDF procesado y datos almacenados correctamente."}, status=200)
         splitter(data["pdfFile"])
         return Response({"message": "PDF procesado y datos almacenados correctamente."}, status=200)
 

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from services.imageHandler.imageHandler import ImageHandler  
+from services.imageHandler.imageHandler import ImageHandler  # Cambiado a importación absoluta
 import uuid
 
 class User(AbstractUser):

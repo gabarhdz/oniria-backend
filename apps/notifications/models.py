@@ -1,7 +1,8 @@
 from django.db import models
 import uuid
-from apps.users.models import User
+from apps.users.models import User  # Cambiado a importación absoluta
 from apps.community.models import Community, Post
+from services.imageHandler.imageHandler import ImageHandler
 
 class Notification(models.Model):
     """

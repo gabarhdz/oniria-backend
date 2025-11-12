@@ -89,14 +89,14 @@ class PsychologistProfile(models.Model):
         settings.AUTH_USER_MODEL,  
         on_delete=models.CASCADE
     )
-    profile_pic_base64 = models.TextField(blank=True, null=True)  # Campo para guardar la imagen en base64
+    profile_pic_base64 = models.TextField(blank=True, null=True)  # Imagen en base64
 
     def save_profile_pic(self, uploaded_file):
         """
         Procesa y guarda la imagen de perfil en base64.
         """
-        handler = ImageHandler()
-        self.profile_pic_base64 = handler.process_image(self, uploaded_file)
+        base64_image = ImageHandler.process_image(self, uploaded_file)
+        self.profile_pic_base64 = base64_image
         self.save()
 
 
