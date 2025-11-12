@@ -250,10 +250,17 @@ class AllFormResponse(APIView):
 
 class AssignDueTests(APIView):
     permission_classes = [IsAuthenticated]
-
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Listar todos los tests asignados por el psicólogo autenticado.
+        """
+        due_tests = DueTests.objects.filter(psychologist=request.user)
+        serializer = DueTestsSerializer(due_tests, many=True)
+        return Response(serializer.data, status=200)
     def post(self, request, *args, **kwargs):
         """
-        Asignar un test a un paciente.
+        Asignar un test a un paciente.forms pf 
         """
         data = request.data
         psychologist = request.user
