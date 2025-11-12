@@ -272,6 +272,12 @@ class AssignDueTests(APIView):
             patient_instance = User.objects.get(id=data['patient'])
         except User.DoesNotExist:
             raise NotFound("Paciente no encontrado.")
+        
+        if patient_instance == psychologist:
+            return Response({"error": "No puedes asignar un test a ti mismo."}, status=400)
+        
+        if psychologist.is_psychologist is False:
+            return Response({"error": "Solo los psicólogos pueden asignar tests."}, status=403)
 
         # Crear el DueTest
         due_test = DueTests.objects.create(
