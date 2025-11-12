@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import User
 from .serializers import UserSerializer
@@ -139,3 +140,46 @@ class getCurrentUser(APIView):
         Actualización parcial del usuario actual
         """
         return self.put(request, *args, **kwargs)
+    
+
+
+class CreatePsychologists(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        """
+        Actualizar el estado de psicólogo de un usuario específico
+        """
+        # Verificar si el usuario actual es superusuario
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'No tienes permisos para realizar esta acción, solo pueden realizarla superusuarios'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener el ID del usuario a convertir en psicólogo
+        user_id = request.data.get('user_id')
+        
+        if not user_id:
+            return Response(
+                {'error': 'Debes proporcionar el user_id del usuario a convertir en psicólogo'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Buscar el usuario
+        try:
+            psychologist = get_object_or_404(User, pk=user_id)
+        except:
+            return Response(
+                {'error': 'Usuario no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Actualizar el estado
+        psychologist.is_psychologist = True
+        psychologist.save()
+        
+        # Serializar y retornar
+        serializer = UserSerializer(psychologist, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
