@@ -3,6 +3,7 @@ from django.conf import settings  # Importamos settings para usar AUTH_USER_MODE
 from services.imageHandler.imageHandler import ImageHandler
 import uuid
 from django.db.models import Sum
+import random
 
 # Create your models here.
 class emotion(models.Model):
@@ -33,22 +34,23 @@ class psychologist(models.Model):
 
 class questions(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    psychologist = models.ForeignKey(psychologist, on_delete=models.CASCADE)
+    psychologist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     question_text = models.TextField(null=False, max_length=1000)
     min_value = models.IntegerField(null=False, default=0)
     max_value = models.IntegerField(null=False, default=10)
 
     def __str__(self):
-        return f"Question by {self.psychologist.user.username}: {self.question_text[:50]}"
+        return f"Question  {self.question_text[:50]}"
 
 class forms(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    psychologist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(null=False, max_length=200)
     description = models.TextField(null=True, blank=True, max_length=5000)
-    questions = models.ForeignKey(questions, related_name='forms', on_delete=models.DO_NOTHING)
+    questions = models.ManyToManyField(questions, related_name='forms')  # Cambiado a ManyToManyField
 
     def __str__(self):
-        return f"Form: {self.title} by {self.psychologist.user.username}"
+        return f"Form: {self.title} by {self.psychologist.username}"
 
 class form_response(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -56,8 +58,11 @@ class form_response(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='form_responses')  # Usamos settings.AUTH_USER_MODEL
     created_at = models.DateTimeField(auto_now_add=True)
     total_score = models.IntegerField(null=True, blank=True, help_text="Suma de los valores de las answers")
-
+    due_test = models.OneToOneField('DueTests', on_delete=models.SET_NULL, null=True, blank=True, related_name='form_response')
     def compute_total(self):
+        """
+        Calcula y actualiza el puntaje total basado en las respuestas asociadas.
+        """
         agg = self.answers.aggregate(total=Sum('value'))
         total = agg['total'] or 0
         self.total_score = total
@@ -81,7 +86,7 @@ class answer(models.Model):
 
 class PsychologistProfile(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,  # Usamos settings.AUTH_USER_MODEL en lugar de 'auth.User'
+        settings.AUTH_USER_MODEL,  
         on_delete=models.CASCADE
     )
     profile_pic_base64 = models.TextField(blank=True, null=True)  # Campo para guardar la imagen en base64
@@ -93,3 +98,48 @@ class PsychologistProfile(models.Model):
         handler = ImageHandler()
         self.profile_pic_base64 = handler.process_image(self, uploaded_file)
         self.save()
+
+
+class DueTests(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    psychologist = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='due_tests_psychologists',
+        on_delete=models.CASCADE
+    )
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='due_tests_patients',
+        on_delete=models.CASCADE
+    )
+    form = models.ForeignKey(
+        forms,
+        on_delete=models.CASCADE,
+        related_name='due_test',
+        null=True,
+        blank=True
+    )
+    date = models.DateTimeField(null=False)
+    description = models.TextField(null=True, blank=True, max_length=5000)
+    is_completed = models.BooleanField(default=False)
+    access_code = models.IntegerField(null=False, unique=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Generar un código de acceso único automáticamente si no se proporciona.
+        """
+        if not self.access_code:
+            self.access_code = self.generate_unique_access_code()
+        super().save(*args, **kwargs)
+
+    def generate_unique_access_code(self):
+        """
+        Generar un código de acceso único de 6 dígitos.
+        """
+        while True:
+            code = random.randint(100000, 999999)  
+            if not DueTests.objects.filter(access_code=code).exists():
+                return code
+
+    def __str__(self):
+        return f"DueTest for {self.patient.username} by {self.psychologist.username} on {self.date.isoformat()}"
