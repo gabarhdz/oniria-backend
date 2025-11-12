@@ -258,6 +258,7 @@ class AssignDueTests(APIView):
         due_tests = DueTests.objects.filter(psychologist=request.user)
         serializer = DueTestsSerializer(due_tests, many=True)
         return Response(serializer.data, status=200)
+    
     def post(self, request, *args, **kwargs):
         """
         Asignar un test a un paciente.forms pf 
@@ -306,3 +307,37 @@ class AssignDueTests(APIView):
         due_tests = DueTests.objects.filter(psychologist=request.user)
         serializer = DueTestsSerializer(due_tests, many=True)
         return Response(serializer.data, status=200)
+
+class SpecficDueTest(APIView):
+    permission_classes = [IsFormQuestionOwnerOrReadOnly]
+    
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            due_test = DueTests.objects.get(id=pk)
+        except DueTests.DoesNotExist:
+            raise NotFound("DueTest no encontrado.")
+        
+        self.check_object_permissions(request, due_test)
+        serializer = DueTestsSerializer(due_test)
+        return Response(serializer.data)
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            due_test = DueTests.objects.get(id=pk)
+        except DueTests.DoesNotExist:
+            raise NotFound("DueTest no encontrado.")
+        
+        self.check_object_permissions(request, due_test)
+        data = request.data
+        serializer = DueTestsSerializer(due_test, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            due_test = DueTests.objects.get(id=pk)
+        except DueTests.DoesNotExist:
+            raise NotFound("DueTest no encontrado.")
+        
+        self.check_object_permissions(request, due_test)
+        due_test.delete()
+        return Response({"message": "DueTest eliminado exitosamente."}, status=204)

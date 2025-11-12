@@ -54,6 +54,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 class FormSerializer(serializers.ModelSerializer):
     # Mostrar las preguntas asociadas al formulario
     questions = QuestionSerializer(many=True, read_only=True)
+    psychologist = UserSerializer(read_only=True)
     # Permitir asociar preguntas al formulario mediante sus UUIDs
     questions_ids = serializers.PrimaryKeyRelatedField(
         queryset=QuestionModel.objects.all(), many=True, write_only=True, source='questions', pk_field=serializers.UUIDField(format='hex')
@@ -137,6 +138,9 @@ class FormResponseSerializer(serializers.ModelSerializer):
 
 
 class DueTestsSerializer(serializers.ModelSerializer):
+    patient = UserSerializer(read_only=True)
+    psychologist = UserSerializer(read_only=True)
+    form = FormSerializer(read_only=True)
     class Meta:
         model = DueTestsModel
         fields = ['id',
