@@ -4,6 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from .models import User
 from .serializers import UserSerializer
 import logging
@@ -45,7 +48,7 @@ class getAllUsers(APIView):
                 {'error': f'Error al crear usuario: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+   
 
 class getSpecificUser(APIView):
     permission_classes = [IsAuthenticated]
@@ -139,3 +142,7 @@ class getCurrentUser(APIView):
         Actualización parcial del usuario actual
         """
         return self.put(request, *args, **kwargs)
+
+
+
+

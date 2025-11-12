@@ -6,6 +6,7 @@ from apps.users.chat_views import ChatAPIView
 from apps.notifications import urls as notification_urls
 
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('apps.users.urls')),
