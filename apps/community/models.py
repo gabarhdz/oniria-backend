@@ -58,3 +58,4 @@ class PostImage(models.Model):
 
     def __str__(self):
         return f"Imagen de {self.post.title}"
+
