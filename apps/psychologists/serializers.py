@@ -142,12 +142,17 @@ class DueTestsSerializer(serializers.ModelSerializer):
         fields = ['id',
                   'psychologist',
                   'patient',
-                  'form_response',
+                  'form',
                   'date',
                   'description',
-                  'is_completed']
+                  'is_completed',
+                  'access_code']
     def validate_date(self, value):
         if value < timezone.now():
             raise serializers.ValidationError("Fecha incorrecta, debe ser una fecha futura.")
         return value
+    def create(self, validated_data):
+        validated_data['is_completed'] = False
+        return super().create(validated_data)
+    
 

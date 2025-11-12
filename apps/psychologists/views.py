@@ -8,6 +8,9 @@ from .permissions import IsFormQuestionOwnerOrReadOnly, IsOwnerOrReadOnly
 from .models import psychologist, university, forms, questions, answer, PsychologistProfile, form_response, DueTests    
 from .serializers import PsychologistSerializer, UniversitySerializer, FormSerializer, QuestionSerializer, AnswerSerializer, FormResponseSerializer, DueTestsSerializer
 from services.splitPDF.splitPDF import splitPDF
+from django.conf import settings
+from django.contrib.auth import get_user_model
+
 # Create your views here.
 
 class AllPsychologists(APIView):
@@ -244,3 +247,49 @@ class AllFormResponse(APIView):
 
         serializer = FormResponseSerializer(fr, context={'request': request})
         return Response(serializer.data, status=201)
+
+class AssignDueTests(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        """
+        Asignar un test a un paciente.
+        """
+        data = request.data
+        psychologist = request.user
+
+        # Obtener el modelo de usuario real
+        User = get_user_model()
+
+        # Validar que el formulario existe
+        try:
+            form_instance = forms.objects.get(id=data['form'])
+        except forms.DoesNotExist:
+            raise NotFound("Formulario no encontrado.")
+
+        # Validar que el paciente existe
+        try:
+            patient_instance = User.objects.get(id=data['patient'])
+        except User.DoesNotExist:
+            raise NotFound("Paciente no encontrado.")
+
+        # Crear el DueTest
+        due_test = DueTests.objects.create(
+            psychologist=psychologist,
+            patient=patient_instance,
+            form=form_instance,
+            date=data['date'],
+            description=data.get('description', ""),
+        )
+
+        # Serializar y devolver la respuesta
+        serializer = DueTestsSerializer(due_test)
+        return Response(serializer.data, status=201)
+
+    def get(self, request, *args, **kwargs):
+        """
+        Listar todos los tests asignados por el psicólogo autenticado.
+        """
+        due_tests = DueTests.objects.filter(psychologist=request.user)
+        serializer = DueTestsSerializer(due_tests, many=True)
+        return Response(serializer.data, status=200)

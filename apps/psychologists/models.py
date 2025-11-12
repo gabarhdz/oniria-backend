@@ -3,6 +3,7 @@ from django.conf import settings  # Importamos settings para usar AUTH_USER_MODE
 from services.imageHandler.imageHandler import ImageHandler
 import uuid
 from django.db.models import Sum
+import random
 
 # Create your models here.
 class emotion(models.Model):
@@ -57,7 +58,7 @@ class form_response(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='form_responses')  # Usamos settings.AUTH_USER_MODEL
     created_at = models.DateTimeField(auto_now_add=True)
     total_score = models.IntegerField(null=True, blank=True, help_text="Suma de los valores de las answers")
-
+    due_test = models.OneToOneField('DueTests', on_delete=models.SET_NULL, null=True, blank=True, related_name='form_response')
     def compute_total(self):
         """
         Calcula y actualiza el puntaje total basado en las respuestas asociadas.
@@ -100,6 +101,7 @@ class PsychologistProfile(models.Model):
 
 
 class DueTests(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     psychologist = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='due_tests_psychologists',
@@ -110,16 +112,34 @@ class DueTests(models.Model):
         related_name='due_tests_patients',
         on_delete=models.CASCADE
     )
-    form_response = models.ForeignKey(
-        form_response,
+    form = models.ForeignKey(
+        forms,
         on_delete=models.CASCADE,
-        related_name='due_test'
-        ,null=True
-        ,blank=True
+        related_name='due_test',
+        null=True,
+        blank=True
     )
     date = models.DateTimeField(null=False)
     description = models.TextField(null=True, blank=True, max_length=5000)
     is_completed = models.BooleanField(default=False)
+    access_code = models.IntegerField(null=False, unique=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Generar un código de acceso único automáticamente si no se proporciona.
+        """
+        if not self.access_code:
+            self.access_code = self.generate_unique_access_code()
+        super().save(*args, **kwargs)
+
+    def generate_unique_access_code(self):
+        """
+        Generar un código de acceso único de 6 dígitos.
+        """
+        while True:
+            code = random.randint(100000, 999999)  
+            if not DueTests.objects.filter(access_code=code).exists():
+                return code
 
     def __str__(self):
         return f"DueTest for {self.patient.username} by {self.psychologist.username} on {self.date.isoformat()}"
