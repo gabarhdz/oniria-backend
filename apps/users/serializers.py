@@ -3,12 +3,11 @@ from rest_framework import serializers
 from .models import User
 import re
 
-
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     profile_pic = serializers.ImageField(write_only=True, required=False, allow_null=True)
     profile_pic_url = serializers.SerializerMethodField(read_only=True)
-
+    
     class Meta:
         model = User
         fields = [
@@ -16,7 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 
             'username', 
             'email',
-            'is_psychologist', 
+            'is_psychologist',
+            'is_superuser',  # 👈 AGREGADO
             'description', 
             'profile_pic',  # Para escritura (archivo)
             'profile_pic_url',  # Para lectura (base64)
@@ -25,8 +25,9 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'url': {'view_name': 'user-detail', 'lookup_field': 'pk'},
+            'is_superuser': {'read_only': True}  # 👈 Solo lectura, no se puede modificar desde API
         }
-
+    
     def get_profile_pic_url(self, obj):
         """
         Devuelve la imagen en base64 con el prefijo data:image
@@ -38,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
             # Si no, agregar el prefijo (asumiendo JPEG por defecto)
             return f"data:image/jpeg;base64,{obj.profile_pic_base64}"
         return None
-
+    
     def validate_password(self, value):
         """Validar fortaleza de la contraseña"""
         if not re.search(
@@ -49,7 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
                 "La contraseña debe tener al menos 12 caracteres, 1 mayúscula, 1 número y un carácter especial."
             )
         return value
-
+    
     def create(self, validated_data):
         """
         Crear usuario con imagen en base64
@@ -64,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             description=validated_data.get('description', ''),
             is_psychologist=validated_data.get('is_psychologist', False)
+            # is_superuser NO se puede establecer aquí por seguridad
         )
         
         # Establecer contraseña
@@ -83,7 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
         
         user.save()
         return user
-
+    
     def update(self, instance, validated_data):
         """
         Actualizar usuario con imagen en base64
@@ -92,9 +94,10 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         profile_pic_file = validated_data.pop('profile_pic', None)
         
-        # Actualizar campos normales
+        # Actualizar campos normales (excepto is_superuser que es read_only)
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+            if attr != 'is_superuser':  # 👈 Prevenir modificación de is_superuser
+                setattr(instance, attr, value)
         
         # Actualizar contraseña si se proporcionó
         if password:

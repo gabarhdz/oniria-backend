@@ -143,3 +143,54 @@ class DueTests(models.Model):
 
     def __str__(self):
         return f"DueTest for {self.patient.username} by {self.psychologist.username} on {self.date.isoformat()}"
+
+
+class PsychologistApplication(models.Model):
+    """
+    Modelo para solicitudes de conversión a psicólogo
+    """
+    STATUS_CHOICES = (
+        ('pending', 'Pendiente'),
+        ('approved', 'Aprobada'),
+        ('rejected', 'Rechazada'),
+    )
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='psychologist_applications'
+    )
+    
+    # Información profesional
+    university_name = models.CharField(max_length=200)
+    professional_description = models.TextField(max_length=2000)
+    credentials_document = models.TextField(null=True, blank=True)  # Base64 del documento
+    
+    # Estado de la solicitud
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Revisión
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_applications'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(max_length=500, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"Solicitud de {self.user.username} - {self.status}"
