@@ -23,4 +23,6 @@ urlpatterns = [
     path('assign-due-tests/', views.AssignDueTests.as_view()),
     path('due-tests/<str:pk>/', views.SpecficDueTest.as_view()),
     path('ai-training/', views.AiTraining.as_view()),
+    path('my-due-tests/', views.MyDueTests.as_view()),
+
 ]

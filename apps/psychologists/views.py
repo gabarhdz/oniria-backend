@@ -290,39 +290,52 @@ class AllFormResponse(APIView):
         serializer = FormResponseSerializer(responses, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    def post(self, request):
-        """Crear respuesta a formulario con sus answers"""
-        data = request.data
-        user = request.user
-        form_id = data.get("form")
+    # En views.py, actualiza AllFormResponse.post()
 
-        # Validar formulario
+def post(self, request):
+    """Crear respuesta a formulario con sus answers"""
+    data = request.data
+    user = request.user
+    form_id = data.get("form")
+    due_test_id = data.get("due_test")  # 🔹 NUEVO: Recibir due_test_id
+
+    # Validar formulario
+    try:
+        form_obj = forms.objects.get(id=form_id)
+    except forms.DoesNotExist:
+        raise NotFound("Formulario no encontrado.")
+
+    # Crear form_response
+    fr = form_response.objects.create(user=user, form=form_obj)
+
+    # Crear answers
+    answers_payload = data.get("answers", [])
+    for a in answers_payload:
+        qid = a.get("question")
+        value = a.get("value")
+        if qid is None or value is None:
+            continue
         try:
-            form_obj = forms.objects.get(id=form_id)
-        except forms.DoesNotExist:
-            raise NotFound("Formulario no encontrado.")
+            q = questions.objects.get(id=qid)
+        except questions.DoesNotExist:
+            continue
+        answer.objects.create(response=fr, question=q, value=value)
 
-        # Crear form_response
-        fr = form_response.objects.create(user=user, form=form_obj)
+    # Calcular total
+    fr.compute_total()
 
-        # Crear answers
-        answers_payload = data.get("answers", [])
-        for a in answers_payload:
-            qid = a.get("question")
-            value = a.get("value")
-            if qid is None or value is None:
-                continue
-            try:
-                q = questions.objects.get(id=qid)
-            except questions.DoesNotExist:
-                continue
-            answer.objects.create(response=fr, question=q, value=value)
+    # 🔹 NUEVO: Marcar DueTest como completado
+    if due_test_id:
+        try:
+            due_test = DueTests.objects.get(id=due_test_id, patient=user)
+            due_test.is_completed = True
+            due_test.save()
+            print(f"✅ DueTest {due_test_id} marcado como completado")
+        except DueTests.DoesNotExist:
+            print(f"⚠️ DueTest {due_test_id} no encontrado")
 
-        # Calcular total
-        fr.compute_total()
-
-        serializer = FormResponseSerializer(fr, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    serializer = FormResponseSerializer(fr, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 # ===== VISTAS DE TESTS ASIGNADOS =====
@@ -632,3 +645,12 @@ class PsychologistApplicationViewSet(viewsets.ModelViewSet):
             {'message': 'Solicitud cancelada exitosamente'},
             status=status.HTTP_204_NO_CONTENT
         )
+
+class MyDueTests(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Tests asignados al paciente actual y pendientes"""
+        due_tests = DueTests.objects.filter(patient=request.user, is_completed=False)
+        serializer = DueTestsSerializer(due_tests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
