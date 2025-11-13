@@ -127,29 +127,24 @@ def current_psychologist_profile(request):
 
 # ===== VISTAS DE FORMULARIOS =====
 
+# apps/psychologists/views.py
 class AllForms(APIView):
-    """
-    Listar todos los formularios y crear nuevos
-    """
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
-        """Listar todos los formularios"""
-        forms_qs = forms.objects.all()
-        serializer = FormSerializer(forms_qs, many=True)
+        """Listar todos los formularios del psicólogo autenticado"""
+        forms_qs = forms.objects.filter(psychologist=request.user)
+        serializer = FormSerializer(forms_qs, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def post(self, request):
         """Crear nuevo formulario"""
         data = request.data.copy()
-        data['psychologist'] = request.user.id 
-        
-        serializer = FormSerializer(data=data)
+        data['psychologist'] = request.user.id  # asigna automáticamente el psicólogo
+        serializer = FormSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 class FormDetail(APIView):
     """
     Obtener, actualizar o eliminar un formulario específico
@@ -345,42 +340,48 @@ class AssignDueTests(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request):
-        """Asignar test a paciente"""
         data = request.data
         psychologist_user = request.user
 
-        # Validar que sea psicólogo
         if not psychologist_user.is_psychologist:
             return Response(
-                {"error": "Solo los psicólogos pueden asignar tests."}, 
+              {"error": "Solo los psicólogos pueden asignar tests."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Validar formulario
+        patient_id = data.get("patient")
+        form_id = data.get("form")
+        date = data.get("date")
+
+        if not patient_id or not form_id or not date:
+            return Response(
+                {"error": "Campos obligatorios faltantes: 'patient', 'form' o 'date'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # Validar paciente
         try:
-            form_instance = forms.objects.get(id=data['form'])
+            patient_instance = User.objects.get(id=patient_id)
+        except User.DoesNotExist:
+            raise NotFound("Paciente no encontrado.")
+
+    # Validar formulario
+        try:
+            form_instance = forms.objects.get(id=form_id)
         except forms.DoesNotExist:
             raise NotFound("Formulario no encontrado.")
 
-        # Validar paciente
-        try:
-            patient_instance = User.objects.get(id=data['patient'])
-        except User.DoesNotExist:
-            raise NotFound("Paciente no encontrado.")
-        
-        # Validar que no se asigne a sí mismo
         if patient_instance == psychologist_user:
             return Response(
                 {"error": "No puedes asignar un test a ti mismo."}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Crear DueTest
         due_test = DueTests.objects.create(
             psychologist=psychologist_user,
             patient=patient_instance,
             form=form_instance,
-            date=data['date'],
+            date=date,
             description=data.get('description', ""),
         )
 

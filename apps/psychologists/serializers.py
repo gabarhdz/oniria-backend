@@ -93,14 +93,13 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class FormSerializer(serializers.ModelSerializer):
-    """Serializador para Formularios"""
     questions = QuestionSerializer(many=True, read_only=True)
     psychologist = SimpleUserSerializer(read_only=True)
     questions_ids = serializers.PrimaryKeyRelatedField(
-        queryset=QuestionModel.objects.all(), 
-        many=True, 
-        write_only=True, 
-        source='questions', 
+        queryset=QuestionModel.objects.all(),
+        many=True,
+        write_only=True,
+        source='questions',
         pk_field=serializers.UUIDField(format='hex')
     )
 
@@ -116,18 +115,21 @@ class FormSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        """Crear formulario con preguntas asociadas"""
+        # Extraer preguntas
         questions_data = validated_data.pop('questions', [])
-        form_obj = FormModel.objects.create(**validated_data)
+        # Asignar psicólogo desde el request
+        user = self.context['request'].user
+        form_obj = FormModel.objects.create(psychologist=user, **validated_data)
         form_obj.questions.set(questions_data)
         return form_obj
 
     def update(self, instance, validated_data):
-        """Actualizar formulario y sus preguntas"""
+        # Actualizar campos del formulario
         questions_data = validated_data.pop('questions', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        # Actualizar preguntas si se envían
         if questions_data is not None:
             instance.questions.set(questions_data)
         return instance
