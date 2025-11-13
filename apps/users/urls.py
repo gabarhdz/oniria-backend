@@ -9,6 +9,6 @@ urlpatterns = [
     path('me/', getCurrentUser.as_view(), name='current-user'),
     path('create-psychologist/',CreatePsychologists.as_view(),name='create-psychologist'), 
     path('psychologist/',AllPsychologists.as_view(),name="get psychologists"),
-    path('psychologist/<str:pk>/',SpecificPsychologist), # Nueva ruta para usuario actual
+    path('psychologist/<str:pk>/',SpecificPsychologist.as_view()), # Nueva ruta para usuario actual
     path('<str:pk>/', getSpecificUser.as_view(), name='user-detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

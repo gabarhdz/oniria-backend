@@ -38,23 +38,7 @@ from services.splitPDF.splitPDF import splitPDF
 User = get_user_model()
 
 
-# ===== EXPORTAR TODAS LAS VISTAS =====
-__all__ = [
-    'AllPsychologists',
-    'SpecificPsychologist',
-    'current_psychologist_profile',
-    'AllForms',
-    'FormDetail',
-    'AllQuestions',
-    'QuestionDetail',
-    'CreateAnswer',
-    'AllFormResponse',
-    'AssignDueTests',
-    'SpecficDueTest',
-    'AiTraining',
-    'UploadProfilePic',
-    'PsychologistApplicationViewSet'
-]
+
 
 
 # ===== VISTAS DE PSICÓLOGOS =====

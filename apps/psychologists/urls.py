@@ -1,37 +1,26 @@
-# apps/psychologists/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
-    AllPsychologists,
-    SpecificPsychologist,
-    AiTraining,
-    AllForms,
-    FormDetail,
-    AllQuestions,
-    CreateAnswer,
-    AllFormResponse,
-    AssignDueTests,
-    PsychologistApplicationViewSet
-)
-
 
 router = DefaultRouter()
-router.register(
-    r'applications',
-    PsychologistApplicationViewSet,
-    basename='psychologist-application'
-)
+
+# Import después del router
+from apps.psychologists import views
+
+router.register(r'applications', views.PsychologistApplicationViewSet, basename='psychologist-application')
 
 urlpatterns = [
     path('', include(router.urls)),
-
-    path('psychologists/', AllPsychologists.as_view(), name='all_psychologists'),
-    path('psychologist/<str:pk>/', SpecificPsychologist.as_view(), name='specific_psychologist'),
-    path('ai-training/', AiTraining.as_view(), name='ai_training'),
-    path('forms/', AllForms.as_view(), name='all_forms'),
-    path('forms/<str:pk>/', FormDetail.as_view(), name='form_detail'),
-    path('questions/', AllQuestions.as_view(), name='all_questions'),
-    path('answers/', CreateAnswer.as_view(), name='create_answer'),
-    path('form-response/', AllFormResponse.as_view(), name="response-form"),
-    path('assign-due-tests/', AssignDueTests.as_view(), name='assign_due_tests'),
+    path('psychologists/', views.AllPsychologists.as_view()),
+    path('psychologist/profile/me/', views.current_psychologist_profile),
+    path('psychologist/upload-profile-pic/', views.UploadProfilePic.as_view()),
+    path('psychologist/<str:pk>/', views.SpecificPsychologist.as_view()),
+    path('forms/', views.AllForms.as_view()),
+    path('forms/<str:pk>/', views.FormDetail.as_view()),
+    path('questions/', views.AllQuestions.as_view()),
+    path('questions/<str:pk>/', views.QuestionDetail.as_view()),
+    path('answers/', views.CreateAnswer.as_view()),
+    path('form-response/', views.AllFormResponse.as_view()),
+    path('assign-due-tests/', views.AssignDueTests.as_view()),
+    path('due-tests/<str:pk>/', views.SpecficDueTest.as_view()),
+    path('ai-training/', views.AiTraining.as_view()),
 ]
