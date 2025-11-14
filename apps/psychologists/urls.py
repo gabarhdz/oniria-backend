@@ -20,9 +20,13 @@ urlpatterns = [
     path('questions/<str:pk>/', views.QuestionDetail.as_view()),
     path('answers/', views.CreateAnswer.as_view()),
     path('form-response/', views.AllFormResponse.as_view()),
+    
+    path('my-form-responses/', views.PsychologistFormResponses.as_view()),
+    path('patient-responses/<str:patient_id>/', views.PatientFormResponses.as_view()),
+    path('form-response/<str:pk>/', views.FormResponseDetail.as_view()),
+    
     path('assign-due-tests/', views.AssignDueTests.as_view()),
     path('due-tests/<str:pk>/', views.SpecficDueTest.as_view()),
     path('ai-training/', views.AiTraining.as_view()),
     path('my-due-tests/', views.MyDueTests.as_view()),
-
 ]

@@ -290,52 +290,59 @@ class AllFormResponse(APIView):
         serializer = FormResponseSerializer(responses, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    # En views.py, actualiza AllFormResponse.post()
+    def post(self, request):  # 👈 DEBE ESTAR INDENTADO DENTRO DE LA CLASE
+        """Crear respuesta a formulario con sus answers"""
+        data = request.data
+        user = request.user
+        form_id = data.get("form")
+        due_test_id = data.get("due_test")
 
-def post(self, request):
-    """Crear respuesta a formulario con sus answers"""
-    data = request.data
-    user = request.user
-    form_id = data.get("form")
-    due_test_id = data.get("due_test")  # 🔹 NUEVO: Recibir due_test_id
-
-    # Validar formulario
-    try:
-        form_obj = forms.objects.get(id=form_id)
-    except forms.DoesNotExist:
-        raise NotFound("Formulario no encontrado.")
-
-    # Crear form_response
-    fr = form_response.objects.create(user=user, form=form_obj)
-
-    # Crear answers
-    answers_payload = data.get("answers", [])
-    for a in answers_payload:
-        qid = a.get("question")
-        value = a.get("value")
-        if qid is None or value is None:
-            continue
+        # Validar formulario
         try:
-            q = questions.objects.get(id=qid)
-        except questions.DoesNotExist:
-            continue
-        answer.objects.create(response=fr, question=q, value=value)
+            form_obj = forms.objects.get(id=form_id)
+        except forms.DoesNotExist:
+            raise NotFound("Formulario no encontrado.")
 
-    # Calcular total
-    fr.compute_total()
+        # Crear form_response y vincular al due_test
+        fr = form_response.objects.create(user=user, form=form_obj)
 
-    # 🔹 NUEVO: Marcar DueTest como completado
-    if due_test_id:
-        try:
-            due_test = DueTests.objects.get(id=due_test_id, patient=user)
-            due_test.is_completed = True
-            due_test.save()
-            print(f"✅ DueTest {due_test_id} marcado como completado")
-        except DueTests.DoesNotExist:
-            print(f"⚠️ DueTest {due_test_id} no encontrado")
+        # 🔹 Vincular al DueTest si existe
+        if due_test_id:
+            try:
+                due_test = DueTests.objects.get(id=due_test_id, patient=user)
+                fr.due_test = due_test
+                fr.save()
+            except DueTests.DoesNotExist:
+                print(f"⚠️ DueTest {due_test_id} no encontrado")
 
-    serializer = FormResponseSerializer(fr, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Crear answers
+        answers_payload = data.get("answers", [])
+        for a in answers_payload:
+            qid = a.get("question")
+            value = a.get("value")
+            if qid is None or value is None:
+                continue
+            try:
+                q = questions.objects.get(id=qid)
+            except questions.DoesNotExist:
+                continue
+            answer.objects.create(response=fr, question=q, value=value)
+
+        # Calcular total
+        fr.compute_total()
+
+        # 🔹 Marcar DueTest como completado
+        if due_test_id:
+            try:
+                due_test = DueTests.objects.get(id=due_test_id, patient=user)
+                due_test.is_completed = True
+                due_test.save()
+                print(f"✅ DueTest {due_test_id} marcado como completado")
+            except DueTests.DoesNotExist:
+                print(f"⚠️ DueTest {due_test_id} no encontrado para marcar como completado")
+
+        serializer = FormResponseSerializer(fr, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 # ===== VISTAS DE TESTS ASIGNADOS =====
@@ -653,4 +660,91 @@ class MyDueTests(APIView):
         """Tests asignados al paciente actual y pendientes"""
         due_tests = DueTests.objects.filter(patient=request.user, is_completed=False)
         serializer = DueTestsSerializer(due_tests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class PsychologistFormResponses(APIView):
+    """
+    Vista para que psicólogos vean las respuestas de sus formularios
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Obtener todas las respuestas a formularios del psicólogo"""
+        
+        # Verificar que el usuario sea psicólogo
+        if not request.user.is_psychologist:
+            return Response(
+                {"error": "Solo los psicólogos pueden acceder a esta vista"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener todas las respuestas de formularios creados por este psicólogo
+        responses = form_response.objects.filter(
+            form__psychologist=request.user
+        ).select_related('user', 'form', 'due_test').prefetch_related('answers')
+        
+        serializer = FormResponseSerializer(responses, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PatientFormResponses(APIView):
+    """
+    Vista para ver respuestas de un paciente específico
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, patient_id):
+        """Obtener respuestas de un paciente específico"""
+        
+        # Verificar que el usuario sea psicólogo
+        if not request.user.is_psychologist:
+            return Response(
+                {"error": "Solo los psicólogos pueden acceder a esta vista"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Verificar que el paciente existe
+        try:
+            patient = User.objects.get(id=patient_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Paciente no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Obtener respuestas del paciente a formularios del psicólogo
+        responses = form_response.objects.filter(
+            user=patient,
+            form__psychologist=request.user
+        ).select_related('user', 'form', 'due_test').prefetch_related('answers')
+        
+        serializer = FormResponseSerializer(responses, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FormResponseDetail(APIView):
+    """
+    Ver detalles de una respuesta específica
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk):
+        """Obtener detalles de una respuesta específica"""
+        
+        try:
+            response_obj = form_response.objects.get(id=pk)
+        except form_response.DoesNotExist:
+            return Response(
+                {"error": "Respuesta no encontrada"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Verificar permisos: psicólogo que creó el formulario o el paciente que respondió
+        if request.user != response_obj.user and request.user != response_obj.form.psychologist:
+            return Response(
+                {"error": "No tienes permiso para ver esta respuesta"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = FormResponseSerializer(response_obj, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
