@@ -188,12 +188,20 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # o el servidor SMTP que uses
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'noctiria.dreams@gmail.com'
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+
 DJOSER = {
     'LOGIN_FIELD': 'username',
     'USER_CREATE_PASSWORD_RETYPE': False,
     'USERNAME_CHANGED_EMAIL_CONFIRMATION': False,
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': False,
-    'SEND_CONFIRMATION_EMAIL': False,
+    'SEND_CONFIRMATION_EMAIL': True,
     'SEND_ACTIVATION_EMAIL': False,
     'SET_USERNAME_RETYPE': False,
     'SET_PASSWORD_RETYPE': False,

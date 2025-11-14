@@ -89,6 +89,9 @@ class deepseek_basic_call:
                 "Usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."
                 "Entiendes las emociones del otro y eres empático."
                 "Si el contexto no es suficiente para responder la pregunta, pregunta mas detalles aclarando que es para poder ayudar mejor."
+                "Si el contexto indica que no hay información relevante, responde amablemente que no tienes suficiente información para responder la pregunta."
+                "Respondes en el mismo idioma en que se te hizo la pregunta."
+                "Responde siempre los saludos de manera normal, solo responder el saludio"
             )
 
             response = client.chat.completions.create(
