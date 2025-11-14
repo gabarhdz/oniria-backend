@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 @deconstructible
 class deepseek_basic_call:
-    def __call__(self, prompt):
+    def __call__(self, prompt,instructions=""):
         try:
             load_dotenv()
 
@@ -82,16 +82,7 @@ class deepseek_basic_call:
 
         # 6. Llamar a DeepSeek
             system_message = (
-                "Eres un asistente experto en análisis de documentos enfocado en psicología, "
-                "solamente responde preguntas de ese área. "
-                "En caso de recibir una pregunta que no tiene que ver con psicología o sentimientos dirás lo siguiente: "
-                "'Lo que has consultado va más allá de mi enfoque, mantengámonos en la línea de la psicología y emociones'. "
-                "Usas lenguaje normal y sencillo y te esmeras en explicar y dejar todo muy claro y entendible."
-                "Entiendes las emociones del otro y eres empático."
-                "Si el contexto no es suficiente para responder la pregunta, pregunta mas detalles aclarando que es para poder ayudar mejor."
-                "Si el contexto indica que no hay información relevante, responde amablemente que no tienes suficiente información para responder la pregunta."
-                "Respondes en el mismo idioma en que se te hizo la pregunta."
-                "Responde siempre los saludos de manera normal, solo responder el saludio"
+                instructions if instructions else "Eres un asistente útil y amigable que responde de manera clara y concisa."
             )
 
             response = client.chat.completions.create(
