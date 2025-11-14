@@ -162,6 +162,7 @@ class FormResponseSerializer(serializers.ModelSerializer):
     form = FormSerializer(read_only=True)
     user = SimpleUserSerializer(read_only=True)
     answers = AnswerSerializer(many=True, read_only=True)
+    due_test = serializers.SerializerMethodField()
     
     class Meta:
         model = FormResponseModel
@@ -171,8 +172,21 @@ class FormResponseSerializer(serializers.ModelSerializer):
             'user',
             'created_at',
             'total_score',
-            'answers'
+            'answers',
+            'due_test'
         ]
+    
+    def get_due_test(self, obj):
+        """Incluir información del due_test si existe"""
+        if obj.due_test:
+            return {
+                'id': str(obj.due_test.id),
+                'description': obj.due_test.description,
+                'date': obj.due_test.date.isoformat(),
+                'is_completed': obj.due_test.is_completed,
+                'access_code': obj.due_test.access_code
+            }
+        return None
 
 
 # ===== SERIALIZADORES DE TESTS ASIGNADOS =====
