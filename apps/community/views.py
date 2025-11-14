@@ -119,8 +119,8 @@ class Posts(APIView):
         user = request.user
         community_id = request.data.get("community")
         parent_post_id = request.data.get("parent_post")
-        text = request.data.get("text", "").strip()
-        text += request.data.get("title","")
+
+        text = f"titulo: {request.data.get("title")} texto: {request.data.get("text")}"
         # Validar datos requeridos
         if not community_id:
             return Response({"error": "Community ID is required"}, status=400)
