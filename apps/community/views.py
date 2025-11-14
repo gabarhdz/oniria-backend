@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from .permissions import IsOwnerOrReadOnly, IsCommunityOwnerOrReadOnly
 from .models import Community, Post
 from .serializers import CommunitySerializer, PostSerializer
-
+from services.aiImplementation.deepseek_moderation import deepseek_basic_call as DeepseekModeration
 class Communities(APIView):
     permission_classes = [IsCommunityOwnerOrReadOnly]
     
@@ -119,11 +119,16 @@ class Posts(APIView):
         user = request.user
         community_id = request.data.get("community")
         parent_post_id = request.data.get("parent_post")
-
+        text = request.data.get("text", "").strip()
         # Validar datos requeridos
         if not community_id:
             return Response({"error": "Community ID is required"}, status=400)
-
+        
+        DeepseekModerationInstance = DeepseekModeration()
+        moderation_result = DeepseekModerationInstance(text)
+        if moderation_result.strip() == "403":
+            return Response({"error": "El contenido del post no es apropiado."}, status=403)
+        
         # Convertir el ID a instancias reales
         community = get_object_or_404(Community, id=community_id)
         parent_post = None
