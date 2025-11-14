@@ -89,23 +89,26 @@ class Notification(models.Model):
             self.save()
     
     def to_dict(self):
-        """Convertir a diccionario para enviar por WebSocket"""
+        sender_data = None
+        if self.sender:
+            sender_data = {
+                'id': str(self.sender.id),
+                'username': self.sender.username,
+                'profile_pic_url': self.sender.profile_pic_base64 if self.sender.profile_pic_base64 else None,
+            }
+        
         return {
-            'id': self.id,
+            'id': str(self.id),
             'type': self.notification_type,
             'title': self.title,
             'message': self.message,
-            'sender': {
-                'id': self.sender.id,
-                'username': self.sender.username,
-                'profile_pic': self.sender.profile_pic.url if self.sender and self.sender.profile_pic else None,
-            } if self.sender else None,
+            'sender': sender_data,
             'community': {
-                'id': self.community.id,
+                'id': str(self.community.id),
                 'name': self.community.name,
             } if self.community else None,
             'post': {
-                'id': self.post.id,
+                'id': str(self.post.id),
                 'title': self.post.title,
             } if self.post else None,
             'redirect_url': self.redirect_url,
