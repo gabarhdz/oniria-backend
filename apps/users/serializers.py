@@ -16,16 +16,16 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 
             'email',
             'is_psychologist',
-            'is_superuser',  # 👈 AGREGADO
+            'is_superuser',  
             'description', 
-            'profile_pic',  # Para escritura (archivo)
+            'profile_pic',  #
             'profile_pic_url',  # Para lectura (base64)
             'password',
             'date_joined'
         ]
         extra_kwargs = {
             'url': {'view_name': 'user-detail', 'lookup_field': 'pk'},
-            'is_superuser': {'read_only': True}  # 👈 Solo lectura, no se puede modificar desde API
+            'is_superuser': {'read_only': True}  
         }
     
     def get_profile_pic_url(self, obj):
@@ -33,10 +33,9 @@ class UserSerializer(serializers.ModelSerializer):
         Devuelve la imagen en base64 con el prefijo data:image
         """
         if obj.profile_pic_base64:
-            # Si ya tiene el prefijo data:image, devolverlo tal cual
+            
             if obj.profile_pic_base64.startswith('data:image'):
                 return obj.profile_pic_base64
-            # Si no, agregar el prefijo (asumiendo JPEG por defecto)
             return f"data:image/jpeg;base64,{obj.profile_pic_base64}"
         return None
     

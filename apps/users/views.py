@@ -28,13 +28,13 @@ class getAllUsers(APIView):
         Create a new user instance with profile picture in base64
         """
         try:
-            # El serializer ahora maneja todo internamente
+            
             serializer = UserSerializer(data=request.data, context={'request': request})
             
             if serializer.is_valid():
                 user = serializer.save()
                 
-                # Retornar datos del usuario creado
+                
                 response_serializer = UserSerializer(user, context={'request': request})
                 return Response(response_serializer.data, status=status.HTTP_201_CREATED)
             

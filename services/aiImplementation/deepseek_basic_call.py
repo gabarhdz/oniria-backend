@@ -26,7 +26,7 @@ class deepseek_basic_call:
                 timeout=30.0  # Timeout de 30 segundos
             )
 
-            # Intentar conectar con ChromaDB
+            
             context = ""
             try:
                 
@@ -44,11 +44,11 @@ class deepseek_basic_call:
                         database=config("CHROMADB_DATABASE", default="default_database"),
                     )
                 else:
-                    # ChromaDB Local
+                    
                     logger.info("Usando ChromaDB local...")
                     chroma_client = chromadb.Client()
 
-                # Obtener o crear colección
+                
                 collection = chroma_client.get_or_create_collection(name="noctiria_knowledge")
                 
                 # Buscar contextos relevantes en ChromaDB
@@ -69,7 +69,7 @@ class deepseek_basic_call:
                 logger.warning(f"Error al conectar con ChromaDB: {str(chroma_error)}")
                 context = "Base de conocimiento no disponible temporalmente."
 
-            # Construir prompt completo
+            
             if context and context != "Base de conocimiento no disponible temporalmente.":
                 full_prompt = f"""Usa el siguiente contexto para responder la pregunta de manera clara y amigable.
 
@@ -82,7 +82,7 @@ class deepseek_basic_call:
 
         # 6. Llamar a DeepSeek
             system_message = (
-                instructions if instructions else "Eres un asistente útil y amigable que responde de manera clara y concisa."
+                instructions if instructions else "Eres un asistente útil y amigable que responde de manera clara y concisa. No responda información que no tenga que ver con el contexto de atención psicologica, responde con palabras sencillas, responde siempre los saludos"
             )
 
             response = client.chat.completions.create(
