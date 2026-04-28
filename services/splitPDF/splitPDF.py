@@ -5,13 +5,6 @@ from decouple import config
 from dotenv import load_dotenv
 from django.utils.deconstruct import deconstructible
 
-import chromadb
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from langchain_community.document_loaders import PyPDFium2Loader
-from langchain_chroma import Chroma
-
 # set dotenv
 load_dotenv()
 
@@ -20,6 +13,17 @@ class splitPDF:
     def __call__(self, pdfFile):
         tmp_path = None
         try:
+            try:
+                import chromadb
+                from langchain.text_splitter import RecursiveCharacterTextSplitter
+                from langchain_community.document_loaders import PyPDFium2Loader
+                from langchain_community.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+                from langchain_chroma import Chroma
+            except ImportError as exc:
+                raise RuntimeError(
+                    "Faltan dependencias para procesar PDFs y cargar documentos en ChromaDB."
+                ) from exc
+
             # Save pdf
             pdf_bytes = pdfFile.read()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
@@ -64,4 +68,3 @@ class splitPDF:
             if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)
                 print(f"Temp file deleted {tmp_path}")
-

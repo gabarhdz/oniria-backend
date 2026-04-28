@@ -1,5 +1,3 @@
-from openai import OpenAI
-import chromadb
 from decouple import config
 from dotenv import load_dotenv
 from django.utils.deconstruct import deconstructible
@@ -19,6 +17,12 @@ class deepseek_basic_call:
                 logger.error("DEEPSEEK_API_KEY no está configurada")
                 return "Error: La API key de DeepSeek no está configurada."
 
+            try:
+                from openai import OpenAI
+            except ImportError:
+                logger.error("La dependencia 'openai' no está instalada")
+                return "Error: La dependencia 'openai' no está instalada."
+
             # Inicializar cliente OpenAI para DeepSeek
             client = OpenAI(
                 api_key=api_key,
@@ -29,6 +33,7 @@ class deepseek_basic_call:
             # Intentar conectar con ChromaDB
             context = ""
             try:
+                import chromadb
                 
                 chromadb_api_key = config("CHROMADB_API_KEY", default="")
                 
